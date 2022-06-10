@@ -21,20 +21,8 @@ public class client {
                 throw new Exception("invalid n_port");
             }
             reqCode = Integer.parseInt(args[2]);
-            String buffer = new String();
             for (int i = 3; i < args.length; i++) {
-                System.out.println("incoming args: " + args[i]);
-                if (((args[i].startsWith("\""))||(args[i].startsWith("\'"))) 
-                && ((args[i].endsWith("\""))||(args[i].endsWith("\'")))) {
-                    msgQueue.add(args[i].replaceAll("^[\"\']|[\"\']$", ""));
-                } else if (((args[i].startsWith("\""))||(args[i].startsWith("\'")))) {
-                    buffer = args[i];
-                } else if (((args[i].endsWith("\""))||(args[i].endsWith("\'")))) {
-                    buffer += " " + args[i];
-                    msgQueue.add(buffer.replaceAll("^[\"\']|[\"\']$", ""));
-                } else {
-                    buffer += " " + args[i];
-                }
+                msgQueue.add(args[i]);
             }
 
 
