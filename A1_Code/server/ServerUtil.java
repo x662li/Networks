@@ -68,7 +68,8 @@ public class ServerUtil {
         do {
             int rPort = 1024 + rand.nextInt(65536 - 1024); // generate r_port
             try {
-                this.udpSocket = new DatagramSocket(rPort);
+                String publicIP = "ubuntu2004-004.student.cs.uwaterloo.ca";
+                this.udpSocket = new DatagramSocket(rPort, InetAddress.getByName(publicIP));
                 validPort = true;
                 this.rPort = rPort;
                 System.out.println("UDP connected initiated at r_port: " + this.rPort);
