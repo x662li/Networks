@@ -142,7 +142,6 @@ public class ServerUtil {
                 int clientReqCode = Integer.parseInt(tcpIO("input", null)); // check req_code
                 if (clientReqCode != this.reqCode) {
                     tcpIO("output", "deny"); // req_code not match, send "deny"
-                    tcpIO("close", "");
                 } else {
                     tcpIO("output", "allow"); // req_code matches, send "allow"
                     if(createUDP()) { // init UDP socket
@@ -162,9 +161,9 @@ public class ServerUtil {
                             udpIO("output", mapReceived); // send reversed message
                         }
                     }
-                    tcpIO("close", null); // exit code received, close tcp IO
-                    this.tcpSocket.close(); // close tcp socket, ready for next client
                 }
+                tcpIO("close", null); // close tcp IO
+                this.tcpSocket.close(); // close tcp socket, ready for next client
             } catch (Exception e) {
                 System.out.println("Server Error: " + e);
             }
