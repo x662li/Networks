@@ -92,7 +92,6 @@ public class ClientUtil {
             tcpIO("init", null);
             tcpIO("output", Integer.toString(this.reqCode));
             if (tcpIO("input", "").equals("allow")){
-                System.out.println("Access Allowed, r_port: " + this.rPort);
                 this.rPort = Integer.parseInt(tcpIO("input", ""));
             } else {
                 System.out.println("Authentication failed, exit");

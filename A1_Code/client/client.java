@@ -24,6 +24,9 @@ public class client {
             for (int i = 3; i < args.length; i++) {
                 msgQueue.add(args[i]);
             }
+            for (String msgs: msgQueue){
+                System.out.println(msgs);
+            }
 
 
         } catch (ArrayIndexOutOfBoundsException e) {
