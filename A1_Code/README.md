@@ -6,7 +6,7 @@ This socket program contains two packages: server and client, which can be deplo
 
 A makefile is provided for compling the project, start by entering
 ```
-$ make clear
+$ make clean
 ```
 in the commandline to delete all the .class file pre-exist, then enter
 ```
