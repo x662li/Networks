@@ -23,6 +23,7 @@ public class client {
             reqCode = Integer.parseInt(args[2]);
             String buffer = new String();
             for (int i = 3; i < args.length; i++) {
+                System.out.println("incoming args: " + args[i]);
                 if (((args[i].startsWith("\""))||(args[i].startsWith("\'"))) 
                 && ((args[i].endsWith("\""))||(args[i].endsWith("\'")))) {
                     msgQueue.add(args[i].replaceAll("^[\"\']|[\"\']$", ""));
@@ -35,6 +36,7 @@ public class client {
                     buffer += " " + args[i];
                 }
             }
+
 
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Input Error: number of inputs does not match");
