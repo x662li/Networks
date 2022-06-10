@@ -12,23 +12,15 @@ public class client {
         int reqCode;
         List<String> msgQueue = new ArrayList<String>();
         try{
-            serverAddress = args[0];
-            if ((!serverAddress.equals("localhost"))  && (!serverAddress.equals("ubuntu2004-002.student.cs.uwaterloo.ca")) && (!serverAddress.equals("ubuntu2004-004.student.cs.uwaterloo.ca"))) {
-                throw new Exception("invalid server address");
-            }
-            nPort = Integer.parseInt(args[1]);
+            serverAddress = args[0]; // server address from cmdline
+            nPort = Integer.parseInt(args[1]); // n_port
             if (!(nPort > 0)) {
                 throw new Exception("invalid n_port");
             }
-            reqCode = Integer.parseInt(args[2]);
+            reqCode = Integer.parseInt(args[2]); // req_code
             for (int i = 3; i < args.length; i++) {
-                msgQueue.add(args[i]);
+                msgQueue.add(args[i]); // push message to message queue
             }
-            for (String msgs: msgQueue){
-                System.out.println(msgs);
-            }
-
-
         } catch (ArrayIndexOutOfBoundsException e) {
             System.out.println("Input Error: number of inputs does not match");
             return;
@@ -38,7 +30,7 @@ public class client {
             return;
         }
 
-        ClientUtil client = new ClientUtil(serverAddress, nPort, reqCode, msgQueue);
-        client.run();
+        ClientUtil client = new ClientUtil(serverAddress, nPort, reqCode, msgQueue); // create ClientUtil object
+        client.run(); // run client
     }
 }

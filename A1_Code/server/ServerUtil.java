@@ -51,9 +51,8 @@ public class ServerUtil {
                 servSocket = new ServerSocket(nPort); // create server socket at n_port
                 validPort = true;
                 this.nPort = nPort;
-                System.out.println("Server socket started at n_port: " + this.nPort); // print n_port
+                System.out.println("SERVER_PORT=" + this.nPort); // print n_port
             } catch (BindException be){
-                System.out.println("Port " + nPort + " in use, try another port.");
             } catch (Exception e) {
                 System.out.println("Server Error: " + e);
                 return null;
@@ -68,12 +67,11 @@ public class ServerUtil {
         do {
             int rPort = 1024 + rand.nextInt(65536 - 1024); // generate r_port
             try {
-                this.udpSocket = new DatagramSocket(rPort, InetAddress.getLocalHost());
+                this.udpSocket = new DatagramSocket(rPort, InetAddress.getLocalHost()); // create new UDP socket
                 validPort = true;
                 this.rPort = rPort;
-                System.out.println("UDP connected initiated at r_port: " + this.rPort);
+                //System.out.println("UDP connected initiated at r_port: " + this.rPort);
             } catch (BindException be) {
-                System.out.println("Port " + rPort + " already in use, try another port");
             } catch (Exception e) {
                 System.out.println(e);
                 return validPort;
@@ -81,23 +79,22 @@ public class ServerUtil {
         } while(!validPort);
         return true;
     }
-
+    // TCP input output
     public String tcpIO(String task, String msg) {
         String out = "";
         try{
             if (task.equals("init")) {
-                this.input = new BufferedReader(new InputStreamReader(this.tcpSocket.getInputStream()));
-                this.output = new PrintWriter(this.tcpSocket.getOutputStream(), true);
+                this.input = new BufferedReader(new InputStreamReader(this.tcpSocket.getInputStream())); // buffer reader initiate
+                this.output = new PrintWriter(this.tcpSocket.getOutputStream(), true); // print writer initiate
                 out = "IO initiated";
             } else if(task.equals("output")) {
-                output.println(msg);
+                output.println(msg); // output message from print writer
                 out = "msg sent";
             } else if(task.equals("input")) {
-                out = input.readLine();
+                out = input.readLine(); // read message from buffer reader
             } else if(task.equals("close")) {
-                this.input.close();
-                this.output.close();
-                //this.tcpSocket.close();
+                this.input.close(); // close input
+                this.output.close(); // close output
                 out = "IO closed";
             } else {
                 throw new Exception("Error: invalid task name");
@@ -107,26 +104,26 @@ public class ServerUtil {
         }
         return out;
     }
-
+    // UDP input output
     public HashMap<String, Object> udpIO(String task, HashMap<String, Object> sendPacket) {
-        HashMap<String, Object> outMap = new HashMap<>();
+        HashMap<String, Object> outMap = new HashMap<>(); // initialize message dict
         try{
             if(task.equals("input")) {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-                this.udpSocket.receive(packet);
-                outMap.put("address", packet.getAddress());
+                byte[] buffer = new byte[1024]; // initialize buffer to be 1024 byte
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length); // create packet object
+                this.udpSocket.receive(packet); // receive packet from socket
+                outMap.put("address", packet.getAddress()); // construct message dict
                 outMap.put("port", packet.getPort());
                 byte[] msgCopy = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), packet.getOffset(), msgCopy, 0, packet.getLength()); // obtain msg with its actual length other than 1024
                 outMap.put("msg", new String(msgCopy));
             } else if(task.equals("output")) {
-                InetAddress address = (InetAddress) sendPacket.get("address");
-                int port = (int) sendPacket.get("port");
+                InetAddress address = (InetAddress) sendPacket.get("address"); // retrive client address from request
+                int port = (int) sendPacket.get("port"); // retrive client port
                 String msg = (String) sendPacket.get("msg");
                 byte[] buffer = msg.getBytes();
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
-                this.udpSocket.send(packet);
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port); // create packet
+                this.udpSocket.send(packet); // send packet to socket
             } else {
                 throw new Exception("Error: invalid task name");
             }
@@ -135,44 +132,43 @@ public class ServerUtil {
         }
         return outMap;
     }
-
+    // run method for server
     public int run() {
-        ServerSocket servSocket = startServer();
+        ServerSocket servSocket = startServer(); // initiate server at n_port
         while(true) {
             try {
-                this.tcpSocket = servSocket.accept();
-                System.out.println(tcpIO("init", ""));
-                int clientReqCode = Integer.parseInt(tcpIO("input", null));
+                this.tcpSocket = servSocket.accept(); // wait for client
+                tcpIO("init", null); // init TCP IO
+                int clientReqCode = Integer.parseInt(tcpIO("input", null)); // check req_code
                 if (clientReqCode != this.reqCode) {
-                    tcpIO("output", "deny");
+                    tcpIO("output", "deny"); // req_code not match, send "deny"
                     tcpIO("close", "");
                 } else {
-                    tcpIO("output", "allow");
-                    if(createUDP()) {
-                        tcpIO("output", Integer.toString(this.rPort));
+                    tcpIO("output", "allow"); // req_code matches, send "allow"
+                    if(createUDP()) { // init UDP socket
+                        tcpIO("output", Integer.toString(this.rPort)); // send r_port
                         String msg;
                         while (true) {
-                            HashMap<String, Object> mapReceived = udpIO("input", new HashMap<String, Object>());
+                            HashMap<String, Object> mapReceived = udpIO("input", new HashMap<String, Object>()); // receive string
                             msg = (String) mapReceived.get("msg");
-                            if (msg.equals("EXIT")) {
-                                System.out.println("EXIT code received!");
+                            if (msg.equals("EXIT")) { // if recieve exit code, close UDP socket
+                                // System.out.println("EXIT code received!");
                                 this.udpSocket.close();
                                 break;
                             }
-                            System.out.println("Message Received: " + msg);
-                            String returnString = "From Server: " + ReverseString(msg);
-                            mapReceived.put("msg", returnString);
-                            udpIO("output", mapReceived);
+                            // System.out.println("Message Received: " + msg);
+                            String returnString = ReverseString(msg); // reverse message
+                            mapReceived.put("msg", returnString); 
+                            udpIO("output", mapReceived); // send reversed message
                         }
                     }
-                    System.out.println(tcpIO("close", null));
+                    tcpIO("close", null); // exit code received, close tcp IO
+                    this.tcpSocket.close(); // close tcp socket, ready for next client
                 }
             } catch (Exception e) {
                 System.out.println("Server Error: " + e);
             }
         }
     }
-
-
 
 }
