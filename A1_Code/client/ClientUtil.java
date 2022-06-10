@@ -74,7 +74,7 @@ public class ClientUtil {
                 out = new String(buffer, 0, packet.getLength());
             } else if(task.equals("output")) {
                 buffer = msg.getBytes();
-                InetAddress address = InetAddress.getLocalHost();
+                InetAddress address = InetAddress.getByName(this.serverAddress);
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, this.rPort);
                 this.udpSocket.send(packet);
             } else {
