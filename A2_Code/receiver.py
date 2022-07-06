@@ -61,14 +61,20 @@ class Receiver:
                 self.write_file(file_name, data)
                 if self.debug: print("[RDT] write file, seq: " + str(seqnum))
                 self.inc_exp_seq()
+                
                 if len(self.pkt_buff) > 0:
-                    buff_seqnums = [p[1] for p in self.pkt_buff]
-                    while self.expect_seqnum <= max(buff_seqnums):
-                        if self.expect_seqnum not in buff_seqnums:
-                            break
+                    while self.expect_seqnum in [p[1] for p in self.pkt_buff]:
+                        buff_idx = [p[1] for p in self.pkt_buff].index(self.expect_seqnum)
+                        if self.pkt_buff[buff_idx][0] == EOT:
+                            if self.debug: print("[RDT] EOT received, send EOT back and terminate")
+                            pkt = self.make_pkt(EOT, self.prev_seq(), 0, '')
+                            self.send_pkt(pkt)
+                            return False
                         else:
-                            self.write_file(file_name, self.pkt_buff[buff_seqnums.index(self.expect_seqnum)][3])
+                            self.write_file(file_name, self.pkt_buff[buff_idx][3])
                             if self.debug: print("[RDT] write file, seq: " + str(self.expect_seqnum))
+                            self.pkt_buff.pop(buff_idx)
+                            if self.debug: print("[RDT] remove item in buffer, index: " + str(buff_idx))
                             self.inc_exp_seq()
                 self.ack_send(self.prev_seq())
                 if self.debug: print("[RDT] send ACK, seq: " + str(self.prev_seq()))
@@ -79,10 +85,10 @@ class Receiver:
                     self.pkt_buff.append((typ, seqnum, length, data))
                 else:
                     if self.debug: print("[RDT] ignore duplicate pkt, seqnum: " + str(seqnum))
-                self.ack_send(self.prev_seq())
-                if self.debug: print("[RDT] send ACK, seq: " + str(self.prev_seq()))
             else:
                 if self.debug: print("[RDT] pkt seq exceeds next 10; recv seqnum: " + str(seqnum) + " expected: " + str(self.expect_seqnum))
+            self.ack_send(self.prev_seq())
+            if self.debug: print("[RDT] send ACK, seq: " + str(self.prev_seq()))
             return True
                 
             

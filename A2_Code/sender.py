@@ -21,7 +21,7 @@ class Sender:
         self.ack_port = ack_port # sender port to receive ack
         # trackers
         self.send_seq = 0 # seq number of current packet to send
-        self.recv_seq = -1 # seq number of oldest un-acked packet
+        self.recv_seq = 0 # seq number of oldest un-acked packet
         self.ack_count = 0 # duplicated ack received for seq num n (n+1 is the oldest un-acked packet)
         self.timer = {"start_time": 0, "started": False} # track time, record start time when started
         # buffers
@@ -57,7 +57,18 @@ class Sender:
             element = -1
         self.seqwind_lock.release()
         return element
-    
+
+    def get_seqwind_idx(self, seqnum):
+        self.seqwind_lock.acquire()
+        seqnums = [rec[0] for rec in self.seq_wind]
+        self.seqwind_lock.release()
+        if seqnum in seqnums:
+            # print("found: " + len(seqnums))
+            return seqnums.index(seqnum)
+        else:
+            # print("not found: " + len(seqnums))
+            return -1
+            
     def get_ackcount(self):
         self.ackcount_lock.acquire()
         count = self.ack_count
@@ -222,14 +233,11 @@ class Sender:
             if self.debug: print("[RECV] EOT received, end program")
             return True # terminate program
         else:
-            if seqnum >= self.recv_seq: # seqnum inside window
+            drop_ind = self.get_seqwind_idx(seqnum)
+            if self.debug: print("[RECV] drop index: " + str(drop_ind))
+            if drop_ind >= 0: # seqnum inside window
                 
-                self.seqwind_lock.acquire()
-                drop_ind = [rec[0] for rec in self.seq_wind].index(seqnum)
-                self.seqwind_lock.release()
-                
-                if self.debug: print("[RECV] drop index: " + str(drop_ind))
-                
+                # if self.debug: print("[RECV] drop index: " + str(drop_ind))
                 
                 self.seqwind_full.acquire()
                 self.seqwind_lock.acquire()
@@ -242,7 +250,9 @@ class Sender:
                 if self.get_seqwind_length() > 0:
                     self.recv_seq = self.get_seqwind_element(0)[0]
                 else:
-                    self.recv_seq = -1
+                    self.recv_seq = (seqnum+1)%32
+                
+                if self.debug: print("[RECV] recv seqnum updated to: " + str(self.recv_seq))
                                     
                 self.winsize_lock.acquire()
                 if self.win_size <= 10:
@@ -253,7 +263,7 @@ class Sender:
                     if self.debug: print("[RECV] window size change to: " + str(self.win_size))
                 self.winsize_lock.release()    
                 
-            elif (self.recv_seq == 0 & seqnum == 31) | (seqnum == self.recv_seq - 1): # seqnum outside window 
+            elif (self.recv_seq == 0 & seqnum == 31) | (seqnum == self.recv_seq - 1): # received seqnum n-1 
                 self.set_ackcount(reset=False)
             return False
     
