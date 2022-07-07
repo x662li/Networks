@@ -1,5 +1,10 @@
 xinyang li 20659339
-abcdefghijklmnopqrstuvwxyz 
-1234567890 
-abcdefghijklmnopqrstuvwxyz 
-1234567890
+The goal of this assignment is to implement a congestion controlled pipelined Reliable Data Transfer
+(RDT) protocol over UDP, which could be used to transfer a text file from one host to another across an
+unreliable network. The protocol should be able to handle packet loss, packet reordering, and duplicate
+packets. For simplicity, your protocol is unidirectional, i.e., data will flow in one direction (from the
+sender to the receiver) and the acknowledgements (ACKs) in the opposite direction. To implement this
+protocol, you will write two programs: a sender and a receiver, with the specifications given below. To
+test your implementation, we will provide a third program, the network emulator that will emulate an
+unreliable network link. 
+this is the end of the test

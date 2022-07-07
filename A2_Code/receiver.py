@@ -1,8 +1,8 @@
 import argparse
-from concurrent.futures import thread
 from packet import Packet
 from socket import *
 import threading
+import logging
 
 class Receiver:
     
@@ -21,6 +21,7 @@ class Receiver:
         self.expect_seqnum = 0
         self.pkt_buff = [] 
         self.debug = debug
+        self.logger = self.config_logger('recv_log', './logs/arrival.log')
         
     def inc_exp_seq(self):
         self.expect_seqnum = (self.expect_seqnum + 1) % 32
@@ -53,13 +54,15 @@ class Receiver:
         if self.debug: print("[RDT] received seq num: " + str(seqnum))
         if seqnum == self.expect_seqnum:
             if typ == EOT:
+                self.logger.info('EOT')
                 if self.debug: print("[RDT] EOT received, send EOT back and terminate")
                 pkt = self.make_pkt(EOT, self.prev_seq(), 0, '')
                 self.send_pkt(pkt)
                 return False
             else:
+                self.logger.info(str(seqnum))
                 self.write_file(file_name, data)
-                if self.debug: print("[RDT] write file, seq: " + str(seqnum))
+                if self.debug: print("[RDT] write file, seq: " + str(seqnum) + ", content: " + str(data))
                 self.inc_exp_seq()
                 
                 if len(self.pkt_buff) > 0:
@@ -72,7 +75,7 @@ class Receiver:
                             return False
                         else:
                             self.write_file(file_name, self.pkt_buff[buff_idx][3])
-                            if self.debug: print("[RDT] write file, seq: " + str(self.expect_seqnum))
+                            if self.debug: print("[RDT] write file, seq: " + str(self.expect_seqnum) + ", content: " + str(self.pkt_buff[buff_idx][3]))
                             self.pkt_buff.pop(buff_idx)
                             if self.debug: print("[RDT] remove item in buffer, index: " + str(buff_idx))
                             self.inc_exp_seq()
@@ -90,7 +93,15 @@ class Receiver:
             self.ack_send(self.prev_seq())
             if self.debug: print("[RDT] send ACK, seq: " + str(self.prev_seq()))
             return True
-                
+    
+    def config_logger(self, logger_name, log_file, level=logging.INFO):
+        hander = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(message)s')
+        hander.setFormatter(formatter)
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(level)
+        logger.addHandler(hander)
+        return logger                
             
 if __name__ == '__main__':
     

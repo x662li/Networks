@@ -3,6 +3,7 @@ from packet import Packet
 from socket import *
 import threading
 import time
+import logging
 
 class Sender:
     
@@ -23,6 +24,7 @@ class Sender:
         self.send_seq = 0 # seq number of current packet to send
         self.recv_seq = 0 # seq number of oldest un-acked packet
         self.ack_count = 0 # duplicated ack received for seq num n (n+1 is the oldest un-acked packet)
+        self.tstmp = 0
         self.timer = {"start_time": 0, "started": False} # track time, record start time when started
         # buffers
         self.data_buffer = [] # loaded data from file, stored by chunks
@@ -30,16 +32,15 @@ class Sender:
         # locks
         self.winsize_lock = threading.Lock() # lock for window size
         self.seqwind_lock = threading.Lock() # mutex for window 
-        
-        # self.seqwind_empty = threading.Semaphore(self.win_size) # empty slots in window
-        # self.empty_lock = threading.Lock() # empty semaphore lock for window size change
-        
+        self.tstmp_lock = threading.Lock()
         self.seqwind_full = threading.Condition()
         self.seqwind_empty = threading.Condition()
-        
-        
         self.ackcount_lock = threading.Lock()
         self.timer_lock = threading.Lock()
+        # loggers
+        self.seqnum_log = self.config_logger('seqnum_log', './logs/seqnum.log')
+        self.ack_log = self.config_logger('ack_log', './logs/ack.log')
+        self.n_log = self.config_logger('n_log', './logs/N.log')
         # debug field
         self.debug = debug # debug mode, print messages
     
@@ -93,8 +94,9 @@ class Sender:
     
     def start_timer(self):
         self.timer_lock.acquire()
-        self.timer['start_time'] = int(round(time.time()*1000))
-        self.timer['started'] = True
+        if self.timer['started'] != 'EOT':
+            self.timer['start_time'] = int(round(time.time()*1000))
+            self.timer['started'] = True
         self.timer_lock.release()
     
     def get_start_time(self):
@@ -111,7 +113,8 @@ class Sender:
     
     def stop_timer(self):
         self.timer_lock.acquire()
-        self.timer['started'] = False
+        if self.timer['started'] != 'EOT':
+            self.timer['started'] = False
         self.timer_lock.release()
     
     def load_data(self, file_name, chunk_size):
@@ -121,7 +124,7 @@ class Sender:
             self.data_buffer.append(data[i:i+chunk_size])
             i += chunk_size
         if i < len(data): 
-            self.data_buffer.append(data[i+1:len(data)])
+            self.data_buffer.append(data[i:len(data)])
             
     def send_pkg(self, pkt):
         with socket(AF_INET, SOCK_DGRAM) as skt:
@@ -151,6 +154,7 @@ class Sender:
             self.seqwind_lock.release()
             
             self.send_pkg(pkt)
+            self.rec_log(self.seqnum_log, self.send_seq)
             self.send_seq = (self.send_seq + 1) % 32
                 
             if not time_watch:
@@ -162,6 +166,7 @@ class Sender:
         
         eot_pkt = self.make_pkt(EOT, self.send_seq, 0, '')
         self.send_pkg(eot_pkt)
+        self.rec_log(self.seqnum_log, 'EOT')
         if self.debug: print("[SEND] EOT packet sent, sender thread terminate")
         
     def retransmit(self, pkt):
@@ -169,6 +174,7 @@ class Sender:
         self.winsize_lock.acquire()
         if self.win_size > 1:
             self.win_size = 1
+            self.rec_log(self.n_log, self.win_size)
             if self.debug: print("[RETRANS] window size change to: " + str(self.win_size))
         self.winsize_lock.release() 
     
@@ -176,6 +182,9 @@ class Sender:
         def get_time(start_time):
             return int(round(time.time()*1000)) - start_time
         while True:
+            if self.is_timer_started() == 'EOT':
+                if self.debug: print("[WATCH] EOT detected, terminate")
+                break
             resend = True
             if self.get_seqwind_length() > 0:
                 watch_item = self.get_seqwind_element(0)
@@ -185,7 +194,7 @@ class Sender:
                 if self.debug: print("[WATCH] watching seqnum: " + str(seqnum))
                 
                 start_time = self.get_start_time()
-                while (self.is_timer_started()) & (get_time(start_time)<=self.timeout):
+                while (self.is_timer_started() == True) & (get_time(start_time)<=self.timeout):
                     # if self.debug: print("[WATCH] time elapse: " + str(get_time(start_time)))
                     
                     if self.get_seqwind_length() < orig_len:
@@ -193,7 +202,6 @@ class Sender:
                         self.start_timer()
                         if self.debug: print("[WATCH] pkt acked, timer restarted")
                         break
-                    
                     if self.get_ackcount() > 2:
                         if self.debug: print("[WATCH] ack count = 3")
                         break
@@ -202,14 +210,12 @@ class Sender:
                     self.retransmit(pkt)
                     self.set_ackcount(reset=True)
                     self.start_timer()
+                    self.rec_log(self.seqnum_log, seqnum)
                     if self.debug: print("[WATCH] retransmit seqnum: " + str(seqnum))
             else:
                 if self.is_timer_started() == True:
                     self.stop_timer()
                     if self.debug: print("[WATCH] timer stopped")
-                elif self.is_timer_started() == 'EOT':
-                    if self.debug: print("[WATCH] EOT detected, terminate")
-                    break
                 self.seqwind_empty.acquire()
                 self.seqwind_empty.wait()
                 self.seqwind_empty.release()
@@ -230,9 +236,11 @@ class Sender:
             self.seqwind_empty.notify()
             self.seqwind_empty.release()
             self.timer['started'] = 'EOT'
+            self.rec_log(self.ack_log, 'EOT')
             if self.debug: print("[RECV] EOT received, end program")
             return True # terminate program
         else:
+            self.rec_log(self.ack_log, seqnum)
             drop_ind = self.get_seqwind_idx(seqnum)
             if self.debug: print("[RECV] drop index: " + str(drop_ind))
             if drop_ind >= 0: # seqnum inside window
@@ -255,9 +263,10 @@ class Sender:
                 if self.debug: print("[RECV] recv seqnum updated to: " + str(self.recv_seq))
                                     
                 self.winsize_lock.acquire()
-                if self.win_size <= 10:
+                if self.win_size < 10:
                     self.seqwind_full.acquire()
                     self.win_size += 1
+                    self.rec_log(self.n_log, self.win_size)
                     self.seqwind_full.notify()
                     self.seqwind_full.release()
                     if self.debug: print("[RECV] window size change to: " + str(self.win_size))
@@ -266,12 +275,30 @@ class Sender:
             elif (self.recv_seq == 0 & seqnum == 31) | (seqnum == self.recv_seq - 1): # received seqnum n-1 
                 self.set_ackcount(reset=False)
             return False
+        
+    def config_logger(self, logger_name, log_file, level=logging.INFO):
+        hander = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(message)s')
+        hander.setFormatter(formatter)
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(level)
+        logger.addHandler(hander)
+        return logger
+    
+    def rec_log(self, logger, record):
+        self.tstmp_lock.acquire()
+        logger.info('t=' + str(self.tstmp) + ' ' + str(record))
+        self.tstmp += 1
+        self.tstmp_lock.release()
     
     def run(self):
+        
         rdtsend_thread = threading.Thread(target=self.rdt_send)
         rdtrecv_thread = threading.Thread(target=self.recv_pkt)
         
         if sender.debug: print("start threads")
+        
+        self.rec_log(self.n_log, self.win_size)
         
         rdtsend_thread.start()
         rdtrecv_thread.start()
@@ -302,35 +329,10 @@ if __name__ == '__main__':
     
     sender = Sender(win_size=1, timeout=300, emu_sock=emu_sock, ack_port=ack_port, debug=True)
     if sender.debug: print("sender created")
-    sender.load_data(file_name=file_name, chunk_size=1)
+    sender.load_data(file_name=file_name, chunk_size=10)
     if sender.debug: print("data loaded, length: " + str(len(sender.data_buffer)))
     
     sender.run()
-    
-    # test script
-    # emu_sock = (str('localhost'), int(8080))
-    # ack_port = int(8083)
-    # file_name = 'test.txt'
-    
-    # sender = Sender(win_size=1, timeout=500, emu_sock=emu_sock, ack_port=ack_port, debug=True)
-    
-    # for i in range(50):
-    #     seqnum = i % 32
-    #     if seqnum == 3:
-    #         continue
-    #     elif seqnum == 6:
-    #         data = 'packet ' + str(3) +  ' seqnum: ' + str(3) + '\n'
-    #         pkt = sender.make_pkt(msg_type=DAT, seq_num=3, length=len(data), data=data)
-    #         sender.send_pkg(pkt)
-    #         time.sleep(0.5)
-    #     data = 'packet ' + str(i) +  ' seqnum: ' + str(seqnum) + '\n'
-    #     pkt = sender.make_pkt(msg_type=DAT, seq_num=seqnum, length=len(data), data=data)
-    #     sender.send_pkg(pkt)
-    #     time.sleep(0.5)
-        
-    # pkt = sender.make_pkt(msg_type=EOT, seq_num=(seqnum+1)%32, length=0, data='')
-    # sender.send_pkg(pkt)
-    
     
     
     
