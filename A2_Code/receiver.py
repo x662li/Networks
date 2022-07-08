@@ -156,7 +156,7 @@ if __name__ == '__main__':
     recv_port = int(args["<recv_port>"])
     file_name = str(args["<file_name>"])
     
-    receiver = Receiver(recv_port=recv_port, emu_sock=emu_sock, debug=True)
+    receiver = Receiver(recv_port=recv_port, emu_sock=emu_sock, debug=False)
     while True:
         if receiver.debug: print("[MAIN] expected seq num: " + str(receiver.expect_seqnum))
         pkt = Packet(receiver.recv_pkt(1024))
