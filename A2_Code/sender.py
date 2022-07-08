@@ -389,7 +389,7 @@ if __name__ == '__main__':
     
     sender = Sender(win_size=1, timeout=200, emu_sock=emu_sock, ack_port=ack_port, debug=False) # construct sender
     if sender.debug: print("sender created")
-    sender.load_data(file_name=file_name, chunk_size=10) # load data
+    sender.load_data(file_name=file_name, chunk_size=500) # load data
     if sender.debug: print("data loaded, length: " + str(len(sender.data_buffer)))
     
     sender.run()
