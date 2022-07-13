@@ -65,14 +65,16 @@ public class Node {
         }  
     }
 
-    public void pushQueue(Packet pkt){
+    public boolean pushQueue(Packet pkt){
         this.buff_lock.lock();
         try{
             this.pkt_buff.add(pkt);
             this.buff_empty.signal();
+            return true;
         } catch (Exception e) {
             System.out.println("Node id: " + this.getId() + " Exception when pushing queue");
             e.printStackTrace();
+            return false;
         } finally {
             this.buff_lock.unlock();
         }  
@@ -98,8 +100,7 @@ public class Node {
     public boolean transmit(Packet pkt, Node nextNode) {
         try{
             pkt.incRouteIdx();
-            nextNode.pushQueue(pkt);
-            return true;
+            return nextNode.pushQueue(pkt);
         } catch (Exception e) {
             System.out.println("Node id: " + this.getId() + " Exception when transmit");
             e.printStackTrace();

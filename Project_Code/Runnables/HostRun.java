@@ -17,7 +17,10 @@ public class HostRun implements Runnable {
         while (true){
             Packet pkt = host.popLoader();
             Node nextNode = simUtil.getNode(pkt.getNextId());
-            host.transmit(pkt, nextNode);
+            if (!host.transmit(pkt, nextNode)){
+                // change transmission rate
+                System.out.println("Host id: " + host.getId() + ", packet drop detected, change transmission rate");
+            }
         }
         
     }

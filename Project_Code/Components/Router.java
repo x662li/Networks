@@ -13,11 +13,22 @@ public class Router extends Node {
         // this aqmAlgo = aqmAlgo;
     }
 
-    public void queueManage(){
-
+    @Override
+    public boolean pushQueue(Packet pkt){
+        // queue management
+        if (this.queueManage(3)){
+            return super.pushQueue(pkt);
+        }
+        return false;
     }
 
+    public boolean queueManage(int thres){
+        if (this.getQSize() > thres){
+            return false;
+        } else {
+            return true;
+        }
+    }
     
-
     
 }
