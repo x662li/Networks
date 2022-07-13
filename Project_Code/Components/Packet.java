@@ -3,16 +3,20 @@ package Components;
 public class Packet {
     private int id;
     private String[] route;
-    private String senderId;
-    private String receiverId;
+    private String sourceId;
+    private String destId;
     private long timeSent;
     private int routeIdx;
 
-    public Packet(int id, String[] route, String senderId, String receiverId) {
+    public Packet(){
+        this(-1, new String[0], "", "");
+    }
+    
+    public Packet(int id, String[] route, String sourceId, String destId) {
         this.id = id;
         this.route = route;
-        this.senderId = senderId;
-        this.receiverId = receiverId;
+        this.sourceId = sourceId;
+        this.destId = destId;
         this.timeSent = 0;
         this.routeIdx = 0;
     }
@@ -21,16 +25,16 @@ public class Packet {
         return this.id;
     }
 
-    public String[] getRoute(){
-        return this.route;
+    public String getNextId(){
+        return this.route[this.routeIdx];
     }
 
-    public String getSenderId(){
-        return this.senderId;
+    public String getsourceId(){
+        return this.sourceId;
     }
 
-    public String getReceiverID(){
-        return this.receiverId;
+    public String getDestId(){
+        return this.destId;
     }
 
     public void setTimeSent(long timeSent){

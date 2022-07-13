@@ -2,84 +2,112 @@ package Components;
 
 import java.util.List;
 import java.util.Queue;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
 
+// node defined in a topological level
 public class Node {
-    private String id;
-    private List<Node> neighbours;
-    protected Queue<Packet> pktQueue;
-    protected Lock qLock;
-    protected Condition notEmpty;
-
-    public Node(String id, List<Node> neighbours, Queue<Packet> pktQueue, Lock qLock){
-        this.id = id;
+    
+    private String type;
+    private String nodeId; // unique ID for nodes
+    private List<String> neighbours; // neighbouring node IDs
+    private Queue<Packet> pkt_buff; // loaded pkt before send
+    private Lock buff_lock; // to lock queues
+    private final Condition buff_empty;
+    
+    public Node(String type, String nodeId, List<String> neighbours){
+        this.type = type;
+        this.nodeId = nodeId;
         this.neighbours = neighbours;
-        this.pktQueue = pktQueue;
-        this.qLock = qLock;
-        this.notEmpty = qLock.newCondition();
+        this.pkt_buff = new LinkedList<Packet>();
+        this.buff_lock = new ReentrantLock();
+        this.buff_empty = buff_lock.newCondition();
+    }
+
+    public String getType(){
+        return this.type;
     }
 
     public String getId(){
-        return this.id;
+        return this.nodeId;
     }
-
-    public List<Node> getNeighbours(){
+    
+    public List<String> getNeighbours(){
         return this.neighbours;
     }
 
-    public Queue<Packet> getPktQueue(){
-        return this.pktQueue;
-    }
-
-    public void pushQueue(Packet pkt) {
-        this.pktQueue.add(pkt);
-    }
-
-    public Lock getQLock() {
-        return this.qLock;
-    }
-
-    public Node findNbr(String nodeId){
-        for (final Node nbr : this.neighbours){
-            if (nbr.getId().equals(nodeId)){
-                return nbr;
-            }
-        }
-        return null;
-    }
-
-    public void transmit(String destId, Packet pkt){
+    public int getQSize(){
+        this.buff_lock.lock();
         try{
-            Node destNode = this.findNbr(destId);
-            if (destNode == null){
-                throw new Exception("Cannot find node with id " + destId);
-            } else {
-                destNode.getQLock().lock();
-                try{
-                    destNode.pushQueue(pkt);
-                } finally {
-                    destNode.getQLock().unlock();
-                }
-            }
-        } catch (Exception e){
-            System.out.println("Transmission Error: " + e);
-        }
-    }
-
-    public void readQueue() {
-        this.qLock.lock();
-        try{
-            if (this.pktQueue.isEmpty()){
-                System.out.println("packet queue is empty");
-            } else {
-                for (final Packet pkt : this.pktQueue){
-                    System.out.println("Packet ID: " + pkt.getId() + ", from: " + pkt.getSenderId());
-                }
-            } 
+            return this.pkt_buff.size();
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when getting queue");
+            e.printStackTrace();
+            return -1;
         } finally {
-            this.qLock.unlock();
+            this.buff_lock.unlock();
+        }  
+    }
+
+    public List<Packet> getQueue(){
+        this.buff_lock.lock();
+        try{
+            return new ArrayList<Packet>(this.pkt_buff);
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when getting queue");
+            e.printStackTrace();
+            return null;
+        } finally {
+            this.buff_lock.unlock();
+        }  
+    }
+
+    public void pushQueue(Packet pkt){
+        this.buff_lock.lock();
+        try{
+            this.pkt_buff.add(pkt);
+            this.buff_empty.signal();
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when pushing queue");
+            e.printStackTrace();
+        } finally {
+            this.buff_lock.unlock();
+        }  
+    }
+
+    public Packet popQueue(){
+        this.buff_lock.lock();
+        try{
+            if (this.pkt_buff.isEmpty()){
+                this.buff_empty.await();
+            }
+            return this.pkt_buff.remove();   
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when poping queue");
+            e.printStackTrace();
+            return null;
+        } finally {
+            this.buff_lock.unlock();
         }
     }
 
+    // return false if empty or error
+    public boolean transmit(Packet pkt, Node nextNode) {
+        try{
+            pkt.incRouteIdx();
+            nextNode.pushQueue(pkt);
+            return true;
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when transmit");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
+    
 }
