@@ -15,7 +15,7 @@ public class Main {
         
         System.out.println("Welcome to Mike's network simulator!");
         
-        // user input
+        // configure network based on user input
         Map<String, List<String>> topology = new HashMap<String, List<String>>();
         List<String> hostIds = new ArrayList<String>();
         List<String> routerIds = new ArrayList<String>();
@@ -44,19 +44,24 @@ public class Main {
                 System.out.print("\n");
                 
                 topology.put(nodeId, neighbours);
-
             }
 
+            System.out.println("please specify simulation mode, (manual or auto)");
+            String mode = input.nextLine();
+
             // create simulation utility
-            SimUtil simUtil = new SimUtil(topology, hostIds, routerIds);
+            SimUtil simUtil = new SimUtil(topology, hostIds, routerIds, null);
 
             // start simRun thread (monitor queue delay, clear sink)
-            SimRun simRun = new SimRun(simUtil);
+            SimRun simRun = new SimRun(simUtil, mode);
             Thread simThread = new Thread(simRun);
             simThread.start();
             System.out.println("Simulation start...");
 
-            // user input for packets
+            // auto mode: host generate packets automatically
+            
+
+            // manual mode: user input for packets
             System.out.println("To generate packet, please enter: <source id> <destination id>");
             while (true){
                 String input_str = input.nextLine();

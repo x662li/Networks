@@ -11,47 +11,80 @@ import java.util.concurrent.locks.Condition;
 public class Host extends Node{
     
     private Queue<Packet> pkt_loader; // packets waiting to be sent
-    private Lock loader_lock;
-    private final Condition loader_empty;
+    private Lock loaderLock;
+    private final Condition loaderEmpty;
+    private int sendRate;
+    private Lock rateLock;
 
     public Host(String nodeId, List<String> neighbours){
         super("host", nodeId, neighbours);
         this.pkt_loader = new LinkedList<Packet>();
-        this.loader_lock = new ReentrantLock();
-        this.loader_empty = loader_lock.newCondition();
+        this.loaderLock = new ReentrantLock();
+        this.loaderEmpty = loaderLock.newCondition();
+        this.sendRate = 1;
+        this.rateLock = new ReentrantLock();
+    }
+
+    public int getRate(){
+        try{
+            rateLock.lock();
+            return this.sendRate;
+        } catch (Exception e) {
+            System.out.println("Host id: " + this.getId() + " Exception when getting rate");
+            e.printStackTrace();
+            return -1;
+        } finally {
+            this.rateLock.unlock();
+        }
+    }
+
+    public void setRate(int mode){
+        try{
+            rateLock.lock();
+            if (mode == 1){
+                this.sendRate = 1;
+            } else {
+                this.sendRate += 1;
+            }
+        } catch (Exception e) {
+            System.out.println("Host id: " + this.getId() + " Exception when setting rate");
+            e.printStackTrace();
+        } finally {
+            this.rateLock.unlock();
+        }
     }
 
     public Queue<Packet> getLoader(){
         try{
-            loader_lock.lock();
+            loaderLock.lock();
             return this.pkt_loader;
         } catch (Exception e) {
             System.out.println("Host id: " + this.getId() + " Exception when getting loader");
             e.printStackTrace();
             return null;
         } finally {
-            this.loader_lock.unlock();
+            this.loaderLock.unlock();
         }
     }
 
     public void addLoader(Packet pkt){
-        loader_lock.lock();
+        loaderLock.lock();
         try{
             this.pkt_loader.add(pkt);
-            this.loader_empty.signal();
+            this.loaderEmpty.signal();
         } catch (Exception e) {
             System.out.println("Host id: " + this.getId() + " Exception when adding to loader");
             e.printStackTrace();
         } finally {
-            this.loader_lock.unlock();
+            this.loaderLock.unlock();
         }  
     }
 
     public Packet popLoader(){
-        loader_lock.lock();
+        loaderLock.lock();
         try{
             if (this.pkt_loader.isEmpty()){
-                this.loader_empty.await();
+                this.loaderEmpty.await();
             }
             return this.pkt_loader.remove();
         } catch (Exception e) {
@@ -59,8 +92,14 @@ public class Host extends Node{
             e.printStackTrace();
             return null;
         } finally {
-            this.loader_lock.unlock();
+            this.loaderLock.unlock();
         }
+    }
+
+    @Override
+    public boolean transmit(Packet pkt, Node nextNode){
+        pkt.setTimeSent(System.currentTimeMillis());
+        return super.transmit(pkt, nextNode);
     }
 
 

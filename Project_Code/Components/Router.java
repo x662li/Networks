@@ -6,28 +6,24 @@ import java.util.concurrent.locks.Lock;
 
 public class Router extends Node {
 
-    // private aqmAlgo;
+    private QManager qManager;
     
     public Router(String nodeId, List<String> neighbours){
         super("router", nodeId, neighbours);
-        // this aqmAlgo = aqmAlgo;
+        this.qManager = new QManager();
     }
 
     @Override
     public boolean pushQueue(Packet pkt){
         // queue management
-        if (this.queueManage(3)){
+        if (this.queueManage()){
             return super.pushQueue(pkt);
         }
         return false;
     }
 
-    public boolean queueManage(int thres){
-        if (this.getQSize() > thres){
-            return false;
-        } else {
-            return true;
-        }
+    public boolean queueManage(){
+        return this.qManager.dropTail(this.getQSize());
     }
     
     

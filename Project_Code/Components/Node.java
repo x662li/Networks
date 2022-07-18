@@ -80,6 +80,7 @@ public class Node {
         }  
     }
 
+
     public Packet popQueue(){
         this.buff_lock.lock();
         try{
@@ -91,6 +92,20 @@ public class Node {
             System.out.println("Node id: " + this.getId() + " Exception when poping queue");
             e.printStackTrace();
             return null;
+        } finally {
+            this.buff_lock.unlock();
+        }
+    }
+
+    public void clearQueue(){
+        this.buff_lock.lock();
+        try{
+            if (!this.pkt_buff.isEmpty()){
+                this.pkt_buff.clear();
+            }  
+        } catch (Exception e) {
+            System.out.println("Node id: " + this.getId() + " Exception when poping queue");
+            e.printStackTrace();
         } finally {
             this.buff_lock.unlock();
         }

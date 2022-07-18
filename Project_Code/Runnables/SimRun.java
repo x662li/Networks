@@ -9,9 +9,11 @@ public class SimRun implements Runnable {
 
     private SimUtil simUtil;  
     private List<Thread> nodeThreads;
+    private String mode;
 
-    public SimRun(SimUtil simUtil){
+    public SimRun(SimUtil simUtil, String mode){
         this.simUtil = simUtil;
+        this.mode = mode;
         this.nodeThreads = new ArrayList<Thread>();
     }
 
@@ -24,7 +26,7 @@ public class SimRun implements Runnable {
             this.nodeThreads.add(new Thread(rRun));
         }
         for (Host host : this.simUtil.getHostList()){
-            HostRun hRun = new HostRun(host, this.simUtil);
+            HostRun hRun = new HostRun(host, this.simUtil, this.mode);
             this.nodeThreads.add(new Thread(hRun));
         }
 
@@ -36,10 +38,10 @@ public class SimRun implements Runnable {
         while (true){
             System.out.println("-----------------");
             this.simUtil.recQueSize();
-            this.simUtil.compDelay();
+            this.simUtil.ArrivalCheck();
             System.out.println("-----------------");
             try {
-                Thread.sleep(5000);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

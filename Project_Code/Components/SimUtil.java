@@ -2,23 +2,46 @@ package Components;
 
 import java.util.Map;
 
+import javax.xml.transform.Source;
 
 import java.util.List;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import com.opencsv.CSVWriter;
+import java.io.File;
 
 public class SimUtil {
     // generate pkt, record queue size, compute queuing delay
     private List<Host> hostList;
     private List<Router> routerList;
+    private List<String> hostIds;
     private Map<String, List<String>> topology;
-    private int pktId;
+    private int pktCnt = 0;
+    private final long startTime;
+    private Map<String, List<String>> destMap;
 
-    public SimUtil(Map<String, List<String>> topology, List<String> hostIds, List<String> routerIds){
+    public SimUtil(Map<String, List<String>> topology, List<String> hostIds, List<String> routerIds, Map<String, List<String>> destMap){
         this.topology = topology;
         this.hostList = new ArrayList<Host>();
         this.routerList = new ArrayList<Router>();
+        this.hostIds = hostIds;
         this.createNodes(hostIds, routerIds);
-        this.pktId = 0;
+        this.pktCnt = 0;
+        this.destMap = destMap;
+        this.startTime = System.currentTimeMillis();
+    }
+
+    public long getTime(long curTime){
+        return curTime - this.startTime;
+    }
+
+    public List<String> getDestMap(String hostId){
+        return this.destMap.get(hostId);
+    }
+
+    public List<String> getHostIds(){
+        return this.hostIds;
     }
 
     public List<Host> getHostList(){
@@ -71,8 +94,9 @@ public class SimUtil {
     }
 
     public boolean load_pkt (String sourId, String destId){
-        Packet pkt = this.generatePkt(this.pktId, sourId, destId);
-        this.pktId ++;
+        String pktId = Integer.toString(this.pktCnt);
+        Packet pkt = this.generatePkt(pktId, sourId, destId);
+        this.pktCnt ++;
         for (Host host : this.hostList){
             if (host.getId().equals(sourId)){
                 host.addLoader(pkt);
@@ -85,34 +109,65 @@ public class SimUtil {
     // routing algorithm
     public String[] routing(String sourId, String destId){
         // replace with path finding
-        
-        String[] route = {"r1", destId};
-        return route;
+        if (sourId.equals("h1") || sourId.equals("h2") || sourId.equals("h3")){
+            return new String[] {"r1", "r2", destId};
+        } else {
+            return new String[] {"r2", "r1", destId};
+        }
     }
 
-    public Packet generatePkt(int pktId, String sourId, String destId){
+    public Packet generatePkt(String pktId, String sourId, String destId){
         String[] route = this.routing(sourId, destId);
         Packet pkt = new Packet(pktId, route, sourId, destId);
         return pkt;
     }
 
-    public void recQueSize(){
-        for (Router router : this.routerList){
-            System.out.println("Router ID: " + router.getId() + ", Queue size: " + router.getQSize());
+    public void changeRate(String hostId, int rate){
+        try{
+            Host host = (Host) this.getNode(hostId);
+            host.setRate(rate);
+        } catch (ClassCastException e){
+            e.printStackTrace();
         }
     }
 
-    public void compDelay(){
+    public void recQueSize(){
+        for (Router router : this.routerList){
+            long timeElps = this.getTime(System.currentTimeMillis()) / 1000;
+            System.out.println("Time: " + timeElps + ", Router ID: " + router.getId() + ", Queue size: " + router.getQSize());
+            
+        }
+    }
+
+    public void ArrivalCheck(){
         for (Host host : this.hostList){
             System.out.println("Host ID: " + host.getId() + ", packet arraived: ");
             if (host.getQSize() > 0) {
                 List<Packet> queue = host.getQueue();
                 for (Packet pkt : queue){
                     System.out.println("ID: " + pkt.getId());
+                    this.changeRate(pkt.getsourceId(), 0); // increase source rate
                 }
+                host.clearQueue();
             } else {
                 System.out.println("None");
             }
+        }
+    }
+
+    public void writeFile(String filePath, List<String[]> records, String[] header){
+        try{
+            File file = new File(filePath);
+            FileWriter writer = new FileWriter(file, true);
+            CSVWriter csvWriter = new CSVWriter(writer);
+            if (file.createNewFile()){
+                csvWriter.writeNext(header);
+            }
+            csvWriter.writeAll(records);
+            csvWriter.close();
+        } catch (IOException e){
+            System.out.println("Error when writing files");
+            e.printStackTrace();
         }
     }
 

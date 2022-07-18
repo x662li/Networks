@@ -17,10 +17,13 @@ public class RouterRun implements Runnable {
         while(true){
             Packet pkt = router.popQueue();
             Node nextNode = simUtil.getNode(pkt.getNextId());
-            router.transmit(pkt, nextNode);
-            System.out.println("router id: " + router.getId() + " queue length: " + router.getQSize());
+            if (!router.transmit(pkt, nextNode)){
+                // System.out.println("Router id: " + router.getId() + ", packet drop detected, change source transmission rate");
+                simUtil.changeRate(pkt.getsourceId(), 1);
+            }
+            // System.out.println("router id: " + router.getId() + " queue length: " + router.getQSize());
             try {
-                Thread.sleep(8000);
+                Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
