@@ -1,7 +1,7 @@
 package Components;
 
 public class Packet {
-    private int id;
+    private String id;
     private String[] route;
     private String sourceId;
     private String destId;
@@ -9,10 +9,10 @@ public class Packet {
     private int routeIdx;
 
     public Packet(){
-        this(-1, new String[0], "", "");
+        this("", new String[0], "", "");
     }
     
-    public Packet(int id, String[] route, String sourceId, String destId) {
+    public Packet(String id, String[] route, String sourceId, String destId) {
         this.id = id;
         this.route = route;
         this.sourceId = sourceId;
@@ -21,7 +21,7 @@ public class Packet {
         this.routeIdx = 0;
     }
 
-    public int getId(){
+    public String getId(){
         return this.id;
     }
 

@@ -23,7 +23,7 @@ public class RouterRun implements Runnable {
             }
             // System.out.println("router id: " + router.getId() + " queue length: " + router.getQSize());
             try {
-                Thread.sleep(100);
+                Thread.sleep(200);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

@@ -35,10 +35,18 @@ public class SimRun implements Runnable {
             thread.start();
         }
 
+        int saveCount = 0;
+
         while (true){
             System.out.println("-----------------");
             this.simUtil.recQueSize();
             this.simUtil.ArrivalCheck();
+            if (saveCount == 10){
+                System.out.print("[SIMRUN] qsize recorded in file");
+                this.simUtil.saveQSize();
+                saveCount = 0;
+            }
+            saveCount ++;
             System.out.println("-----------------");
             try {
                 Thread.sleep(2000);

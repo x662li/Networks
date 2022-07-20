@@ -2,12 +2,12 @@ package Components;
 
 import java.util.Map;
 
-import javax.xml.transform.Source;
-
 import java.util.List;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import com.opencsv.CSVWriter;
 import java.io.File;
 
@@ -20,6 +20,7 @@ public class SimUtil {
     private int pktCnt = 0;
     private final long startTime;
     private Map<String, List<String>> destMap;
+    private Map<String, List<String[]>> qSizeRec;
 
     public SimUtil(Map<String, List<String>> topology, List<String> hostIds, List<String> routerIds, Map<String, List<String>> destMap){
         this.topology = topology;
@@ -30,6 +31,10 @@ public class SimUtil {
         this.pktCnt = 0;
         this.destMap = destMap;
         this.startTime = System.currentTimeMillis();
+        this.qSizeRec = new HashMap<String, List<String[]>>();
+        for (Router router : this.routerList){
+            this.qSizeRec.put(router.getId(), new ArrayList<String[]>());
+        }
     }
 
     public long getTime(long curTime){
@@ -109,11 +114,14 @@ public class SimUtil {
     // routing algorithm
     public String[] routing(String sourId, String destId){
         // replace with path finding
+        
         if (sourId.equals("h1") || sourId.equals("h2") || sourId.equals("h3")){
             return new String[] {"r1", "r2", destId};
         } else {
             return new String[] {"r2", "r1", destId};
         }
+
+        // return new String[] {"r1", destId};
     }
 
     public Packet generatePkt(String pktId, String sourId, String destId){
@@ -133,9 +141,11 @@ public class SimUtil {
 
     public void recQueSize(){
         for (Router router : this.routerList){
-            long timeElps = this.getTime(System.currentTimeMillis()) / 1000;
-            System.out.println("Time: " + timeElps + ", Router ID: " + router.getId() + ", Queue size: " + router.getQSize());
-            
+            int timeElps = (int) this.getTime(System.currentTimeMillis()) / 1000;
+            int qSize = router.getQSize();
+            String rid = router.getId();
+            System.out.println("Time: " + timeElps + ", Router ID: " + rid + ", Queue size: " + qSize);
+            this.qSizeRec.get(rid).add(new String[] {Integer.toString(timeElps), Integer.toString(qSize)});
         }
     }
 
@@ -170,7 +180,14 @@ public class SimUtil {
             e.printStackTrace();
         }
     }
-
+    
+    public void saveQSize(){
+        for (String rid : this.qSizeRec.keySet()){
+            String fPath = "./" + rid + "_qSize.csv";
+            String[] header = new String[] {"time", "q_size"};
+            this.writeFile(fPath, this.qSizeRec.get(rid), header);
+        }
+    }
 
 
 }
