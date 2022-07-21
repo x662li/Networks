@@ -38,12 +38,14 @@ public class SimRun implements Runnable {
         int saveCount = 0;
 
         while (true){
+            int timeElps = (int) this.simUtil.getTime(System.currentTimeMillis()) / 1000;
+            System.out.println("Time: " + timeElps);
             System.out.println("-----------------");
-            this.simUtil.recQueSize();
-            this.simUtil.ArrivalCheck();
+            int totDrop = this.simUtil.routerCheck(timeElps);
+            this.simUtil.ArrivalCheck(timeElps, totDrop);
             if (saveCount == 10){
-                System.out.print("[SIMRUN] qsize recorded in file");
-                this.simUtil.saveQSize();
+                System.out.println("[SIMRUN] data saved to file");
+                this.simUtil.saveFile();
                 saveCount = 0;
             }
             saveCount ++;

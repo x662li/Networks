@@ -1,6 +1,9 @@
 package Components;
 
 import java.lang.Math;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 
 public class QManager {
     private String routerId;
@@ -11,9 +14,10 @@ public class QManager {
     private long qTime;
     private double wt;
     private double maxP;
+    private Lock avgLock;
 
     public QManager(String routerId){
-        this(5, 10, 0.01, 0.5);
+        this(5, 10, 0.01, 0.3);
         this.routerId = routerId;
     }
 
@@ -25,47 +29,82 @@ public class QManager {
         this.qTime = -1;
         this.wt = wt;
         this.maxP = maxP;
+        this.avgLock = new ReentrantLock();
     }
 
-    public boolean dropTail(int qSize){
-        if (qSize >= lThres){
-            return false;
+    public double getAvgQSize(){
+        try{
+            avgLock.lock();
+            return this.avg;
+        } catch (Exception e) {
+            System.out.println("Router id: " + this.routerId + " Exception when getting avgQSize");
+            e.printStackTrace();
+            return (double) -1;
+        } finally {
+            this.avgLock.unlock();
         }
-        return true;
     }
 
-    public boolean RED(int qSize){
+    public void setAvgQSize(double avgSize){
+        try{
+            avgLock.lock();
+            this.avg = avgSize;
+        } catch (Exception e) {
+            System.out.println("Router id: " + this.routerId + " Exception when setting avgQSize");
+            e.printStackTrace();
+        } finally {
+            this.avgLock.unlock();
+        }
+    }
+
+    public boolean calcAvg(int qSize){
         // compute exp moving avg
+        double avg = this.getAvgQSize();
         if (qSize > 0){
             // calculate avg
-            this.avg = (1-this.wt) * this.avg + this.wt * qSize;
-            System.out.println("[RED] router ID: " + this.routerId + ", avg qsize: " + this.avg);
+            this.setAvgQSize((1-this.wt) * avg + this.wt * qSize);
+            // System.out.println("[QM] router ID: " + this.routerId + ", avg qsize: " + this.getAvgQSize());
         } else if ((qSize == 0) && (this.qTime > 0)){
             // queue stays empty avg decay
             int m = (int) (System.currentTimeMillis() - this.qTime)/1000;
-            this.avg = Math.pow(1-this.wt, m) * this.avg;
+            this.setAvgQSize(Math.pow(1-this.wt, m) * avg);
         } else if ((qSize == 0) && (this.qTime < 0)){
             // first time empty
             this.qTime = System.currentTimeMillis();
             return true; // no need to control
         }
+        return false;
+    }
+
+    public boolean dropTail(int qSize){
+        // use hard buffer size limit, just record avg queue size
+        this.calcAvg(qSize);
+        return true;
+    }
+
+    public boolean RED(int qSize){
+        // compute exp moving avg
+        if (this.calcAvg(qSize)){
+            return true;
+        }
         // congestion control
-        if ((this.avg >= this.sThres) && (this.avg < this.lThres)){
+        double avg = this.getAvgQSize();
+        if ((avg >= this.sThres) && (avg < this.lThres)){
             // drop with probability
             this.count ++;
-            double pb = this.maxP * (this.avg - this.sThres) / (this.lThres - this.sThres);
+            double pb = this.maxP * (avg - this.sThres) / (this.lThres - this.sThres);
             double pa = pb / (1 - Math.min(this.count * pb, 0.99));
-            System.out.println("[RED] router ID: " + this.routerId + ", pa pb count: " + pa + ", " + pb + ", " + this.count);
+            // System.out.println("[RED] router ID: " + this.routerId + ", pa pb count: " + pa + ", " + pb + ", " + this.count);
             if (Math.random() <= pa){
-                System.out.println("[RED] router ID: " + this.routerId + ", drop occured");
+                // System.out.println("[RED] router ID: " + this.routerId + ", drop occured");
                 this.count = 0;
                 return false;
             } else {
                 return true;
             }
-        } else if (this.avg >= this.lThres){
+        } else if (avg >= this.lThres){
             // drop all
-            System.out.println("[RED] router ID: " + this.routerId + ", drop-all start");
+            // System.out.println("[RED] router ID: " + this.routerId + ", drop-all start");
             this.count = 0;
             return false;
         } else {

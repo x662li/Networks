@@ -6,6 +6,7 @@ public class Packet {
     private String sourceId;
     private String destId;
     private long timeSent;
+    private long qDelay;
     private int routeIdx;
 
     public Packet(){
@@ -18,6 +19,7 @@ public class Packet {
         this.sourceId = sourceId;
         this.destId = destId;
         this.timeSent = 0;
+        this.qDelay = 0;
         this.routeIdx = 0;
     }
 
@@ -39,6 +41,14 @@ public class Packet {
 
     public void setTimeSent(long timeSent){
         this.timeSent = timeSent;
+    }
+
+    public long getDelay(){
+        return this.qDelay;
+    }
+
+    public void compDelay(){
+        this.qDelay = System.currentTimeMillis() - this.timeSent;
     }
 
     public int getRouteIdx(){

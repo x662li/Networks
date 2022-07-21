@@ -20,6 +20,11 @@ public class RouterRun implements Runnable {
             if (!router.transmit(pkt, nextNode)){
                 // System.out.println("Router id: " + router.getId() + ", packet drop detected, change source transmission rate");
                 simUtil.changeRate(pkt.getsourceId(), 1);
+            } else {
+                if (pkt.getDestId().equals(pkt.getNextId())){
+                    this.simUtil.changeRate(pkt.getsourceId(), 0); // increase source rate
+                    pkt.compDelay();
+                }
             }
             // System.out.println("router id: " + router.getId() + " queue length: " + router.getQSize());
             try {

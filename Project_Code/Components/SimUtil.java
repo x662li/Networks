@@ -17,10 +17,14 @@ public class SimUtil {
     private List<Router> routerList;
     private List<String> hostIds;
     private Map<String, List<String>> topology;
-    private int pktCnt = 0;
+    private int pktCnt;
     private final long startTime;
     private Map<String, List<String>> destMap;
     private Map<String, List<String[]>> qSizeRec;
+    private List<String[]> avgDelayRec;
+    private List<String[]> dropRateRec; 
+    private int totPkt;
+    private int pktArrived;
 
     public SimUtil(Map<String, List<String>> topology, List<String> hostIds, List<String> routerIds, Map<String, List<String>> destMap){
         this.topology = topology;
@@ -35,6 +39,10 @@ public class SimUtil {
         for (Router router : this.routerList){
             this.qSizeRec.put(router.getId(), new ArrayList<String[]>());
         }
+        this.avgDelayRec = new ArrayList<String[]>();
+        this.dropRateRec = new ArrayList<String[]>();
+        this.totPkt = 0;
+        this.pktArrived = 0;
     }
 
     public long getTime(long curTime){
@@ -114,7 +122,7 @@ public class SimUtil {
     // routing algorithm
     public String[] routing(String sourId, String destId){
         // replace with path finding
-        
+
         if (sourId.equals("h1") || sourId.equals("h2") || sourId.equals("h3")){
             return new String[] {"r1", "r2", destId};
         } else {
@@ -127,6 +135,7 @@ public class SimUtil {
     public Packet generatePkt(String pktId, String sourId, String destId){
         String[] route = this.routing(sourId, destId);
         Packet pkt = new Packet(pktId, route, sourId, destId);
+        this.totPkt ++;
         return pkt;
     }
 
@@ -139,39 +148,76 @@ public class SimUtil {
         }
     }
 
-    public void recQueSize(){
+    public int routerCheck(int timeElps){
+        int totDrop = 0;
         for (Router router : this.routerList){
-            int timeElps = (int) this.getTime(System.currentTimeMillis()) / 1000;
             int qSize = router.getQSize();
             String rid = router.getId();
-            System.out.println("Time: " + timeElps + ", Router ID: " + rid + ", Queue size: " + qSize);
-            this.qSizeRec.get(rid).add(new String[] {Integer.toString(timeElps), Integer.toString(qSize)});
+            double avgQSize = router.getAvgQSize();
+            totDrop += router.getDropCount();
+            router.resetDropCount();
+            System.out.println("router ID: " + rid + ", queue size: " + qSize);
+            this.qSizeRec.get(rid).add(new String[] {Integer.toString(timeElps), Integer.toString(qSize), Double.toString(avgQSize)});
         }
+        return totDrop;
     }
 
-    public void ArrivalCheck(){
+    public void ArrivalCheck(int timeElps ,int totDrop){
+        List<Long> delays = new ArrayList<Long>();
         for (Host host : this.hostList){
-            System.out.println("Host ID: " + host.getId() + ", packet arraived: ");
+            // System.out.println("Host ID: " + host.getId() + ", packet arraived: ");
             if (host.getQSize() > 0) {
                 List<Packet> queue = host.getQueue();
                 for (Packet pkt : queue){
-                    System.out.println("ID: " + pkt.getId());
-                    this.changeRate(pkt.getsourceId(), 0); // increase source rate
+                    // System.out.println("ID: " + pkt.getId());
+                    delays.add(pkt.getDelay());
+                    this.pktArrived ++;
                 }
                 host.clearQueue();
             } else {
-                System.out.println("None");
+                // System.out.println("None");
             }
         }
+        // compute avg delay for this round
+        if (delays.size() > 0){
+            Long sumDelay = (long) 0;
+            for (Long dly : delays){
+                sumDelay += dly;
+            }
+            Long avgDelay = sumDelay / delays.size();
+            this.avgDelayRec.add(new String[] {Integer.toString(timeElps), Long.toString(avgDelay)});
+            double dropRate = (double)totDrop / (double)(totDrop + delays.size());
+            this.dropRateRec.add(new String[] {Integer.toString(timeElps), Double.toString(dropRate)});
+            System.out.println("totDrop: " + totDrop + ", delay size: " + delays.size());
+            System.out.println("avg delay: " + avgDelay);
+            System.out.println("packet dropping rate: " + dropRate);
+        } else {
+            Long avgDelay = (long) 0;
+            this.avgDelayRec.add(new String[] {Integer.toString(timeElps), Long.toString(avgDelay)});
+            double dropRate = 0;
+            if (totDrop > 0){
+                dropRate = totDrop/(totDrop + delays.size());
+            }
+            this.dropRateRec.add(new String[] {Integer.toString(timeElps), Double.toString(dropRate)});
+            System.out.println("avg delay: " + avgDelay);
+            System.out.println("packet dropping rate: " + dropRate);
+        }
+        System.out.println("tot pkt generated: " + this.totPkt + ", tot pkt arrived: " + this.pktArrived);
     }
 
     public void writeFile(String filePath, List<String[]> records, String[] header){
         try{
             File file = new File(filePath);
-            FileWriter writer = new FileWriter(file, true);
-            CSVWriter csvWriter = new CSVWriter(writer);
-            if (file.createNewFile()){
+            FileWriter writer;
+            CSVWriter csvWriter;
+            if (!file.exists()){
+                writer = new FileWriter(file, true);
+                csvWriter = new CSVWriter(writer);
+                System.out.println("new file: " + filePath + " created, add header");
                 csvWriter.writeNext(header);
+            } else {
+                writer = new FileWriter(file, true);
+                csvWriter = new CSVWriter(writer);
             }
             csvWriter.writeAll(records);
             csvWriter.close();
@@ -181,12 +227,21 @@ public class SimUtil {
         }
     }
     
-    public void saveQSize(){
+    public void saveFile(){
         for (String rid : this.qSizeRec.keySet()){
-            String fPath = "./" + rid + "_qSize.csv";
-            String[] header = new String[] {"time", "q_size"};
-            this.writeFile(fPath, this.qSizeRec.get(rid), header);
+            String qfPath = "./" + rid + "_qSize.csv";
+            String[] header = new String[] {"time", "q_size", "avg_q_size"};
+            this.writeFile(qfPath, this.qSizeRec.get(rid), header);
+            this.qSizeRec.get(rid).clear();
         }
+        String delayPath = "./avg_delay.csv";
+        String dropPath = "./drop_rate.csv";
+        String[] headerDelay = new String[] {"time", "avg_delay"};
+        String[] headerDrop = new String[] {"time", "drop_rate"};
+        this.writeFile(delayPath, this.avgDelayRec, headerDelay);
+        this.writeFile(dropPath, this.dropRateRec, headerDrop);
+        this.avgDelayRec.clear();
+        this.dropRateRec.clear();
     }
 
 
