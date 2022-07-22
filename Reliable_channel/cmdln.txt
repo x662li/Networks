@@ -1,0 +1,12 @@
+python sender.py localhost 8080 8083 test.txt
+
+python network_emulator.py 8080 localhost 8081 8082 localhost 8083 20 0.1 1
+
+python receiver.py localhost 8082 8081 recv.txt
+
+
+python3 network_emulator.py 9330 ubuntu2004-008.student.cs.uwaterloo.ca 9331 9332 ubuntu2004-004.student.cs.uwaterloo.ca 9333 20 0.2 1
+
+python3 receiver.py ubuntu2004-010.student.cs.uwaterloo.ca 9332 9331 recv.txt
+
+python3 sender.py ubuntu2004-010.student.cs.uwaterloo.ca 9330 9333 test.txt
