@@ -1,21 +1,27 @@
-package Components;
+package Components.Nodes;
 
 import java.util.List;
 // import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
+import Components.Packet;
+import Components.QManagers.*;
+
 public class Router extends Node {
 
     private QManager qManager;
-    private int maxQSize;
     private int dropCount = 0;
     private Lock dropCountLock;
     
     public Router(String nodeId, List<String> neighbours){
         super("router", nodeId, neighbours);
-        this.qManager = new QManager(this.getId());
-        this.maxQSize = 15;
+
+        this.qManager = new DropTail(this.getId());
+        // this.qManager = new Red(this.getId());
+        // this.qManager = new NnRed(this.getId());
+
         this.dropCountLock = new ReentrantLock();
     }
 
@@ -63,7 +69,7 @@ public class Router extends Node {
     @Override
     public boolean pushQueue(Packet pkt){
         // queue management
-        if (this.congesCtrl() && this.getQSize() < this.maxQSize){
+        if (this.congesCtrl()){
             return super.pushQueue(pkt);
         }
         this.incDropCount();
@@ -71,8 +77,7 @@ public class Router extends Node {
     }
 
     public boolean congesCtrl(){
-        return this.qManager.RED(this.getQSize());
-        // return this.qManager.dropTail(this.getQSize());
+        return this.qManager.check(this.getQSize());
     }
     
     

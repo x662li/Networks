@@ -1,4 +1,4 @@
-package Components;
+package Components.Nodes;
 
 import java.util.List;
 import java.util.Queue;
@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import Components.Packet;
+
 import java.util.concurrent.locks.Condition;
 
 // node defined in a topological level

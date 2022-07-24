@@ -1,20 +1,28 @@
 package Runnables;
 
 import Components.*;
+import Components.Nodes.Node;
+import Components.Nodes.Router;
 
 public class RouterRun implements Runnable {
 
     private Router router;
     private SimUtil simUtil;
+    private boolean exit;
 
     public RouterRun(Router router, SimUtil simUtil){
         this.router = router;
         this.simUtil = simUtil;
+        this.exit = false;
+    }
+
+    public void stopThread(){
+        this.exit = true;
     }
 
     @Override
     public void run() {
-        while(true){
+        while(!this.exit){
             Packet pkt = router.popQueue();
             Node nextNode = simUtil.getNode(pkt.getNextId());
             if (!router.transmit(pkt, nextNode)){
@@ -33,6 +41,7 @@ public class RouterRun implements Runnable {
                 e.printStackTrace();
             }
         }
+        System.out.println("[ROUTERRUN] id: " + this.router.getId() + " exit");
     }
     
 

@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class Test {
     
-    public static void main(String[] args){
+    public static void main(String[] args) throws InterruptedException{
 
         System.out.println("entering testing mode");
 
@@ -55,10 +55,11 @@ public class Test {
         SimUtil simUtil = new SimUtil(topology, hostIds, routerIds, destMap);
 
         // start simRun thread
-        SimRun simRun = new SimRun(simUtil, mode);
+        SimRun simRun = new SimRun(simUtil, mode, 200);
         Thread simThread = new Thread(simRun);
         simThread.start();
         System.out.println("test start...");
+        simThread.join();
 
         
 

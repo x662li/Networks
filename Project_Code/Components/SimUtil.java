@@ -9,6 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.opencsv.CSVWriter;
+
+import Components.Nodes.Host;
+import Components.Nodes.Node;
+import Components.Nodes.Router;
+
 import java.io.File;
 
 public class SimUtil {
@@ -229,13 +234,13 @@ public class SimUtil {
     
     public void saveFile(){
         for (String rid : this.qSizeRec.keySet()){
-            String qfPath = "./" + rid + "_qSize.csv";
+            String qfPath = "./data/" + rid + "_qSize.csv";
             String[] header = new String[] {"time", "q_size", "avg_q_size"};
             this.writeFile(qfPath, this.qSizeRec.get(rid), header);
             this.qSizeRec.get(rid).clear();
         }
-        String delayPath = "./avg_delay.csv";
-        String dropPath = "./drop_rate.csv";
+        String delayPath = "./data/avg_delay.csv";
+        String dropPath = "./data/drop_rate.csv";
         String[] headerDelay = new String[] {"time", "avg_delay"};
         String[] headerDrop = new String[] {"time", "drop_rate"};
         this.writeFile(delayPath, this.avgDelayRec, headerDelay);

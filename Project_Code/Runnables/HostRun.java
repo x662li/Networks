@@ -1,6 +1,8 @@
 package Runnables;
 
 import Components.*;
+import Components.Nodes.Host;
+import Components.Nodes.Node;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,12 +14,14 @@ public class HostRun implements Runnable {
     private SimUtil simUtil;
     private String mode;
     private int pktCnt;
+    private boolean exit;
 
     public HostRun(Host host, SimUtil simUtil, String mode){
         this.host = host;
         this.simUtil = simUtil;
         this.mode = mode;
         this.pktCnt = 0;
+        this.exit = false;
     }
 
     public List<Packet> pktGen(int rate, List<String> hostIds, Random rand){
@@ -32,10 +36,14 @@ public class HostRun implements Runnable {
         return pktList;
     }
 
+    public void stopThread(){
+        this.exit = true;
+    }
+
     @Override
     public void run() {
         if (this.mode.equals("manual")){
-            while (true){
+            while (!this.exit){
                 Packet pkt = host.popLoader();
                 Node nextNode = simUtil.getNode(pkt.getNextId());
                 if (!host.transmit(pkt, nextNode)){
@@ -47,7 +55,7 @@ public class HostRun implements Runnable {
         } else {
             List<String> hostIds = simUtil.getDestMap(host.getId());
             Random rand = new Random();
-            while(true) {
+            while(!this.exit) {
                 List<Packet> pktList = this.pktGen(host.getRate(), hostIds, rand);
                 for (Packet pkt : pktList){
                     Node nextNode = simUtil.getNode(pkt.getNextId());
@@ -58,11 +66,15 @@ public class HostRun implements Runnable {
                     }
                 }
                 try {
-                    Thread.sleep(1000);
+                    // sleep 1 - 5 sec randomly
+                    int sleepTime = (1 + (int)(Math.random() * 5)) * 1000;
+                    // System.out.println("[HOSTRUN] id: " + this.host.getId() + " sleep time: " + sleepTime);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            System.out.println("[HOSTRUN] id: " + this.host.getId() + " exit");
         }
     }
     
