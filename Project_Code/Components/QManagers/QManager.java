@@ -81,35 +81,4 @@ public class QManager {
         return true;
     }
 
-
-    // public boolean nnRED(int qSize){
-
-    //     // record avg queue size
-    //     this.calcAvg(qSize);
-
-    //     // every 2 second, update queue sizes in queue, and make new predictions
-    //     if (System.currentTimeMillis()/1000 - this.prevTime >= 2){
-
-    //         if (this.qSizeQ.size() < 4){
-    //             this.qSizeQ.add(qSize);
-    //         } else {
-    //             this.qSizeQ.remove(0);
-    //             this.qSizeQ.add(qSize);
-    //         }
-
-    //         // forward
-    //         double outSum = 0;
-    //         for (int i=0; i<this.qSizeQ.size(); i++){
-    //             outSum += this.qSizeQ.get(i) * this.weights.get(i);
-    //         }
-    //         double output = QManager.sigmoid(outSum);
-    //         // update prevTime
-    //         this.prevTime = System.currentTimeMillis()/1000;
-
-    //     }
-
-    //     return true;
-
-    // }
-
 }
