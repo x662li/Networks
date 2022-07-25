@@ -19,34 +19,38 @@ public class Test {
         List<String> hostIds = new ArrayList<String>();
         List<String> routerIds = new ArrayList<String>();
         Map<String, List<String>> destMap = new HashMap<String, List<String>>();
+        // List<List<String>> routes = new ArrayList<List<String>>();
 
-        hostIds.addAll(Arrays.asList("h1", "h2" , "h3", "h4", "h5", "h6"));
+        hostIds.addAll(Arrays.asList("h1", "h2" , "h3", "h4", "h5", "h6", "h7", "h8"));
         routerIds.addAll(Arrays.asList("r1", "r2"));
+
         topology.put("h1", Arrays.asList("r1"));
         topology.put("h2", Arrays.asList("r1"));
         topology.put("h3", Arrays.asList("r1"));
-        topology.put("r1", Arrays.asList("h1", "h2", "h3", "r2"));
-        topology.put("h4", Arrays.asList("r2"));
+        topology.put("h4", Arrays.asList("r1"));
+
+        topology.put("r1", Arrays.asList("h1", "h2", "h3", "h4", "r2"));
+
         topology.put("h5", Arrays.asList("r2"));
         topology.put("h6", Arrays.asList("r2"));
-        topology.put("r2", Arrays.asList("r1", "h4", "h5", "h6"));
-        destMap.put("h1", Arrays.asList("h4", "h5", "h6"));
-        destMap.put("h2", Arrays.asList("h4", "h5", "h6"));
-        destMap.put("h3", Arrays.asList("h4", "h5", "h6"));
-        destMap.put("h4", Arrays.asList("h1", "h2", "h3"));
-        destMap.put("h5", Arrays.asList("h1", "h2", "h3"));
-        destMap.put("h6", Arrays.asList("h1", "h2", "h3"));
+        topology.put("h7", Arrays.asList("r2"));
+        topology.put("h8", Arrays.asList("r2"));
 
-        // hostIds.addAll((Arrays.asList("h1", "h2", "h3")));
-        // routerIds.addAll(Arrays.asList("r1"));
-        // topology.put("h1", Arrays.asList("r1"));
-        // topology.put("h2", Arrays.asList("r1"));
-        // topology.put("h3", Arrays.asList("r1"));
-        // topology.put("r1", Arrays.asList("h1", "h2", "h3"));
-        // destMap.put("h1", Arrays.asList("h2", "h3"));
-        // destMap.put("h2", Arrays.asList("h1", "h3"));
-        // destMap.put("h3", Arrays.asList("h1", "h2"));
+        topology.put("r2", Arrays.asList("r1", "h5", "h6", "h7", "h8"));
 
+        destMap.put("h1", Arrays.asList("h5", "h6", "h7", "h8"));
+        destMap.put("h2", Arrays.asList("h5", "h6", "h7", "h8"));
+        destMap.put("h3", Arrays.asList("h5", "h6", "h7", "h8"));
+        destMap.put("h4", Arrays.asList("h5", "h6", "h7", "h8"));
+
+        destMap.put("h5", Arrays.asList("h1", "h2", "h3", "h4"));
+        destMap.put("h6", Arrays.asList("h1", "h2", "h3", "h4"));
+        destMap.put("h7", Arrays.asList("h1", "h2", "h3", "h4"));
+        destMap.put("h8", Arrays.asList("h1", "h2", "h3", "h4"));
+
+        // routes.add(Arrays.asList("h1", "r1", "r2", "h4"));
+        // routes.add(Arrays.asList("h1", "r1", "r2", "h4"));
+        // routes.add(Arrays.asList("h1", "r1", "r2", "h4"));
         
         // mode for testing
         String mode = "auto";

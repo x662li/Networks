@@ -18,15 +18,19 @@ public class Router extends Node {
     public Router(String nodeId, List<String> neighbours){
         super("router", nodeId, neighbours);
 
-        this.qManager = new DropTail(this.getId());
+        // this.qManager = new DropTail(this.getId());
         // this.qManager = new Red(this.getId());
-        // this.qManager = new NnRed(this.getId());
+        this.qManager = new NnRed(this.getId());
 
         this.dropCountLock = new ReentrantLock();
     }
 
     public double getAvgQSize(){
         return this.qManager.getAvgQSize();
+    }
+
+    public double getLoss(){
+        return Math.abs(this.qManager.getLoss());
     }
 
     public void resetDropCount(){

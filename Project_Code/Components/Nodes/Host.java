@@ -17,6 +17,7 @@ public class Host extends Node{
     private Lock loaderLock;
     private final Condition loaderEmpty;
     private int sendRate;
+    private final int maxRate;
     private Lock rateLock;
 
     public Host(String nodeId, List<String> neighbours){
@@ -25,6 +26,7 @@ public class Host extends Node{
         this.loaderLock = new ReentrantLock();
         this.loaderEmpty = loaderLock.newCondition();
         this.sendRate = 1;
+        this.maxRate = 5;
         this.rateLock = new ReentrantLock();
     }
 
@@ -47,7 +49,9 @@ public class Host extends Node{
             if (mode == 1){
                 this.sendRate = 1;
             } else {
-                this.sendRate += 1;
+                if (this.sendRate < this.maxRate){
+                    this.sendRate += 1;
+                }
             }
         } catch (Exception e) {
             System.out.println("Host id: " + this.getId() + " Exception when setting rate");

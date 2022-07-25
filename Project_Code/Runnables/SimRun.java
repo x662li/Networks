@@ -6,6 +6,7 @@ import Components.Nodes.Router;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SimRun implements Runnable {
 
@@ -13,6 +14,7 @@ public class SimRun implements Runnable {
     private List<Thread> nodeThreads;
     private List<HostRun> hostRuns;
     private List<RouterRun> routerRuns;
+    private List<String> dropInList;
     private String mode;
     private int simTime;
 
@@ -22,6 +24,7 @@ public class SimRun implements Runnable {
         this.nodeThreads = new ArrayList<Thread>();
         this.hostRuns = new ArrayList<HostRun>();
         this.routerRuns = new ArrayList<RouterRun>();
+        this.dropInList = Arrays.asList("h3", "h4", "h7", "h8");
         this.simTime = simTime;
     }
 
@@ -35,7 +38,18 @@ public class SimRun implements Runnable {
             this.routerRuns.add(rRun);
         }
         for (Host host : this.simUtil.getHostList()){
-            HostRun hRun = new HostRun(host, this.simUtil, this.mode);
+            boolean found = false;
+            HostRun hRun = null;
+            for (String hid : this.dropInList){
+                if (host.getId().equals(hid)){
+                    found = true;
+                    hRun = new HostRun(host, this.simUtil, this.mode, true);
+                    break;
+                }
+            }
+            if (!found){
+                hRun = new HostRun(host, this.simUtil, this.mode, false);
+            }
             this.nodeThreads.add(new Thread(hRun));
             this.hostRuns.add(hRun);
         }
@@ -52,8 +66,11 @@ public class SimRun implements Runnable {
             timeElps = (int) this.simUtil.getTime(System.currentTimeMillis()) / 1000;
             System.out.println("Time: " + timeElps);
             System.out.println("-----------------");
+
             int totDrop = this.simUtil.routerCheck(timeElps);
             this.simUtil.ArrivalCheck(timeElps, totDrop);
+            // this.simUtil.routerCheck(timeElps);
+
             if (saveCount == 10){
                 System.out.println("[SIMRUN] data saved to file");
                 this.simUtil.saveFile();

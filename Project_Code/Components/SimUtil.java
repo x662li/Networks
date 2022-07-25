@@ -6,6 +6,7 @@ import java.util.List;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import com.opencsv.CSVWriter;
@@ -127,14 +128,13 @@ public class SimUtil {
     // routing algorithm
     public String[] routing(String sourId, String destId){
         // replace with path finding
-
-        if (sourId.equals("h1") || sourId.equals("h2") || sourId.equals("h3")){
+        // test symmetrical
+        if (Arrays.asList("h1", "h2", "h3", "h4").contains(sourId)){
             return new String[] {"r1", "r2", destId};
         } else {
             return new String[] {"r2", "r1", destId};
         }
 
-        // return new String[] {"r1", destId};
     }
 
     public Packet generatePkt(String pktId, String sourId, String destId){
@@ -159,6 +159,7 @@ public class SimUtil {
             int qSize = router.getQSize();
             String rid = router.getId();
             double avgQSize = router.getAvgQSize();
+            // double loss = router.getLoss();
             totDrop += router.getDropCount();
             router.resetDropCount();
             System.out.println("router ID: " + rid + ", queue size: " + qSize);

@@ -17,7 +17,7 @@ public class QManager {
     public QManager(String routerId){
         this.routerId = routerId;
         
-        this.maxCap = 15;
+        this.maxCap = 20;
         this.wt = 0.01;
 
         this.avg = 0;
@@ -33,9 +33,13 @@ public class QManager {
         return this.maxCap;
     }
 
+    public double getLoss(){
+        return 0;
+    }
+
     public double getAvgQSize(){
         try{
-            avgLock.lock();
+            this.avgLock.lock();
             return this.avg;
         } catch (Exception e) {
             System.out.println("Router id: " + this.routerId + " Exception when getting avgQSize");
@@ -48,7 +52,7 @@ public class QManager {
 
     public void setAvgQSize(double avgSize){
         try{
-            avgLock.lock();
+            this.avgLock.lock();
             this.avg = avgSize;
         } catch (Exception e) {
             System.out.println("Router id: " + this.routerId + " Exception when setting avgQSize");
