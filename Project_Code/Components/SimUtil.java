@@ -128,13 +128,65 @@ public class SimUtil {
     // routing algorithm
     public String[] routing(String sourId, String destId){
         // replace with path finding
-        // test symmetrical
-        if (Arrays.asList("h1", "h2", "h3", "h4").contains(sourId)){
-            return new String[] {"r1", "r2", destId};
-        } else {
-            return new String[] {"r2", "r1", destId};
-        }
 
+        // test symmetrical
+        // if (Arrays.asList("h1", "h2", "h3", "h4").contains(sourId)){
+        //     return new String[] {"r1", "r2", destId};
+        // } else {
+        //     return new String[] {"r2", "r1", destId};
+        // }
+
+        // test core
+        List<String> r1Lan = Arrays.asList("h11", "h12");
+        List<String> r2Lan = Arrays.asList("h21", "h22");
+        List<String> r3Lan = Arrays.asList("h31", "h32");
+        List<String> r4Lan = Arrays.asList("h41", "h42");
+        if (r1Lan.contains(sourId)){
+            if (r2Lan.contains(destId)){
+                return new String[] {"r1", "r2", destId};
+            }
+            if (r3Lan.contains(destId)){
+                return new String[] {"r1", "r3", destId};
+            }
+            if (r4Lan.contains(destId)){
+                return new String[] {"r1", "r4", destId};
+            }
+        }
+        if (r2Lan.contains(sourId)){
+            if (r1Lan.contains(destId)){
+                return new String[] {"r2", "r1", destId};
+            }
+            if (r3Lan.contains(destId)){
+                return new String[] {"r2", "r3", destId};
+            }
+            if (r4Lan.contains(destId)){
+                return new String[] {"r2", "r4", destId};
+            }
+        }
+        if (r3Lan.contains(sourId)){
+            if (r1Lan.contains(destId)){
+                return new String[] {"r3", "r1", destId};
+            }
+            if (r2Lan.contains(destId)){
+                return new String[] {"r3", "r2", destId};
+            }
+            if (r4Lan.contains(destId)){
+                return new String[] {"r3", "r4", destId};
+            }
+        }
+        if (r4Lan.contains(sourId)){
+            if (r1Lan.contains(destId)){
+                return new String[] {"r4", "r1", destId};
+            }
+            if (r2Lan.contains(destId)){
+                return new String[] {"r4", "r2", destId};
+            }
+            if (r3Lan.contains(destId)){
+                return new String[] {"r4", "r3", destId};
+            }
+        }
+        return new String[] {"invalid"};
+        
     }
 
     public Packet generatePkt(String pktId, String sourId, String destId){

@@ -24,7 +24,7 @@ public class SimRun implements Runnable {
         this.nodeThreads = new ArrayList<Thread>();
         this.hostRuns = new ArrayList<HostRun>();
         this.routerRuns = new ArrayList<RouterRun>();
-        this.dropInList = Arrays.asList("h3", "h4", "h7", "h8");
+        this.dropInList = Arrays.asList("h12", "h22");
         this.simTime = simTime;
     }
 

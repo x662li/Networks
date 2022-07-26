@@ -4,7 +4,6 @@ public class DropTail extends QManager{
 
     public DropTail(String routerId) {
         super(routerId);
-        //TODO Auto-generated constructor stub
     }
 
     @Override

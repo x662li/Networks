@@ -21,6 +21,7 @@ public class NnRed extends QManager{
     public NnRed(String routerId) {
         super(routerId);
         this.weights = Arrays.asList((double)-1.2377534738270426, (double)-0.006727822989079063, (double)0.022625802464786342, (double)2.3845358768500113);
+        // this.weights = Arrays.asList(Math.random(), Math.random(), Math.random(), Math.random());
         this.prevTime = System.currentTimeMillis();
         this.qSizeQ = new ArrayList<Double>();
         this.prediction = -1;
@@ -74,8 +75,8 @@ public class NnRed extends QManager{
             this.prevTime = System.currentTimeMillis();
             this.weights.set(i, this.weights.get(i) + dW);
         }
-        System.out.println("[NNRED] router id: " + super.getRouterId() + " loss: " + loss);
-        System.out.flush();
+        // System.out.println("[NNRED] router id: " + super.getRouterId() + " loss: " + loss);
+        // System.out.flush();
         this.prevTime = System.currentTimeMillis();
     }
 
@@ -117,8 +118,8 @@ public class NnRed extends QManager{
                     outSum += this.qSizeQ.get(i) * this.weights.get(i);
                 }
                 this.prediction = NnRed.sigmoid(outSum);
-                System.out.println("[NNRED] router id: " + super.getRouterId() + " prediction: " + this.prediction * this.getMaxCap());
-                System.out.flush();
+                // System.out.println("[NNRED] router id: " + super.getRouterId() + " prediction: " + this.prediction * this.getMaxCap());
+                // System.out.flush();
                 this.prevTime = System.currentTimeMillis();
                 if (this.prediction >= 0.75){
                     this.dropInd = true;

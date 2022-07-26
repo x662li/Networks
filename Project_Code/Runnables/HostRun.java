@@ -80,11 +80,11 @@ public class HostRun implements Runnable {
                             sleepTime = 500;
                             dropInCnt ++;
                         } else {
-                            sleepTime = (40 + (int)(Math.random() * 5)) * 1000;
                             dropInCnt = 0;
+                            sleepTime = (30 + (int)(Math.random() * 30)) * 1000;
                         }
                     } else {
-                        sleepTime = (1 + (int)(Math.random() * 4)) * 1000;
+                        sleepTime = (1 + (int)(Math.random() * 5)) * 1000;
                     }
                     // System.out.println("[HOSTRUN] id: " + this.host.getId() + " sleep time: " + sleepTime);
                     Thread.sleep(sleepTime);
