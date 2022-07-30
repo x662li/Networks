@@ -17,8 +17,8 @@ ovs-vsctl set bridge s6 protocols=OpenFlow13
 # print protocol each switch supports
 for switch in s0 s1 s2 s3 s4 s6;
 do 
-    protos=$(ovs-vsctl get brige $switch protocols)
-    echo "switch $switch suports $protos"
+    protos=$(ovs-vsctl get bridge $switch protocols)
+    echo "switch $switch supports $protos"
 done
 
 # abbr for command
