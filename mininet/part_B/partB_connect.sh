@@ -54,7 +54,7 @@ $ofctl add-flow S2 \
     in_port=3,actions=mod_dl_src:00:0B:00:00:00:04,mod_dl_dst:D0:D0:D0:D0:D0:D0,output=4
 
 # Print the flows installed in each switch
-for switch in s0 s1 s2 s3 s4 s6;
+for switch in R1 R2 S1 S2 S3;
 do
     echo "Flows installed in $switch:"
     $ofctl dump-flows $switch
