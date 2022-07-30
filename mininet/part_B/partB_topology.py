@@ -58,14 +58,14 @@ def run():
     
     # set IP, MAC for Routers
     R1 = net.get('R1')
-    R1.intf("R1-eth1").setIP("10.1.1.14", 24)
-    R1.intf("R1-eth2").setIP("10.4.4.14", 24)
+    # R1.intf("R1-eth1").setIP("10.1.1.14", 24)
+    # R1.intf("R1-eth2").setIP("10.4.4.14", 24)
     R1.intf("R1-eth1").setMAC("0A:00:00:00:00:01")
     R1.intf("R1-eth2").setMAC("0A:00:00:00:00:02")
     
     R2 = net.get('R2')
-    R2.intf("R2-eth1").setIP("10.4.4.28", 24)
-    R2.intf("R2-eth2").setIP("10.6.6.46", 24)
+    # R2.intf("R2-eth1").setIP("10.4.4.28", 24)
+    # R2.intf("R2-eth2").setIP("10.6.6.46", 24)
     R2.intf("R2-eth1").setMAC("0B:00:00:00:00:01")
     R2.intf("R2-eth2").setMAC("0B:00:00:00:00:02")
     
@@ -93,10 +93,10 @@ def run():
     Carol.cmd('route add default gw 10.6.6.46 dev Carol-eth0')
     
     # add arp cache
-    Alice.cmd('arp -s 10.1.1.14 0A:00:00:00:00:01 -i Alice-eth0')
-    Bob.cmd('arp -s 10.4.4.14 0A:00:00:00:00:02 -i Bob-eth0')
-    David.cmd('arp -s 10.4.4.28 0B:00:00:00:00:01 -i David-eth0')
-    Carol.cmd('arp -s 10.6.6.46 0B:00:00:00:00:02 -i Carol-eth0')
+    Alice.cmd('arp -s 10.1.1.14 00:0A:00:00:00:01 -i Alice-eth0')
+    Bob.cmd('arp -s 10.4.4.14 00:0B:00:00:00:01 -i Bob-eth0')
+    David.cmd('arp -s 10.4.4.28 00:0B:00:00:00:04 -i David-eth0')
+    Carol.cmd('arp -s 10.6.6.46 00:0C:00:00:00:01 -i Carol-eth0')
     
     # open line interface
     CLI(net)
