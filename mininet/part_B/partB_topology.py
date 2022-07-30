@@ -32,7 +32,7 @@ class CSLRTopo(Topo):
         self.addLink(S1, R1, bw=100) # eth2 - eth1
         self.addLink(R1, S2, bw=100) # eth2 - eth2
         self.addLink(S2, R2, bw=100) # eth3 - eth1
-        self.addLink(R1, S3, bw=100) # eth2 - eth2
+        self.addLink(R2, S3, bw=100) # eth2 - eth2
         
 def run():
     # create network
@@ -42,19 +42,19 @@ def run():
     # set IP, MAC for hosts
     Alice = net.get('Alice')
     Alice.intf("Alice-eth0").setIP("10.1.1.17", 24)
-    Alice.intf("Alice-eth0").setMAC("aa:aa:aa:aa:aa:aa")
+    Alice.intf("Alice-eth0").setMAC("AA:AA:AA:AA:AA:AA")
     
     Bob = net.get('Bob')
     Bob.intf("Bob-eth0").setIP("10.4.4.48", 24)
-    Bob.intf("Bob-eth0").setMAC("b0:b0:b0:b0:b0:b0")
+    Bob.intf("Bob-eth0").setMAC("B0:B0:B0:B0:B0:B0")
     
     David = net.get('David')
     David.intf("David-eth0").setIP("10.4.4.96", 24)
-    David.intf("David-eth0").setMAC("d0:d0:d0:d0:d0:d0")
+    David.intf("David-eth0").setMAC("D0:D0:D0:D0:D0:D0")
     
     Carol = net.get('Carol')
     Carol.intf("Carol-eth0").setIP("10.6.6.69", 24)
-    Carol.intf("Carol-eth0").setMAC("cc:cc:cc:cc:cc:cc")
+    Carol.intf("Carol-eth0").setMAC("CC:CC:CC:CC:CC:CC")
     
     # set IP, MAC for Routers
     R1 = net.get('R1')
