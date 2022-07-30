@@ -22,7 +22,7 @@ do
 done
 
 # abbr for command
-ofctl = 'ovs-ofctl -O openFlow13'
+ofctl = 'ovs-ofctl -O OpenFlow13'
 
 # h0 -> h2
 $ofctl add-flow s0 \
