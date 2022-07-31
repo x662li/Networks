@@ -25,13 +25,13 @@ ofctl='ovs-ofctl -O OpenFlow13'
 $ofctl add-flow S1 \
     in_port=1,actions=mod_dl_src:00:0A:00:00:00:02,mod_dl_dst:0A:00:00:00:00:01,output=2
 $ofctl add-flow R1 \
-    in_port=1,ip,nw_src=10.1.1.17,nw_dst=10.4.4.48,actions=mod_dl_src:0A:00:00:00:00:02,mod_dl_dst:00:0B:00:00:00:02,output=2
+    in_port=1,ip,nw_src=10.1.1.17,nw_dst=10.4.4.48,actions=mod_dl_src:0A:00:00:00:00:02,mod_dl_dst:00:0B:00:00:00:03,output=2
 $ofctl add-flow S2 \
-    in_port=2,actions=mod_dl_src:00:0B:00:00:00:01,mod_dl_dst:B0:B0:B0:B0:B0:B0,output=1
+    in_port=3,actions=mod_dl_src:00:0B:00:00:00:01,mod_dl_dst:B0:B0:B0:B0:B0:B0,output=1
 
-# Alice - Bob
+# Bob - Alice
 $ofctl add-flow S2 \
-    in_port=1,actions=mod_dl_src:00:0B:00:00:00:02,mod_dl_dst:0A:00:00:00:00:02,output=2
+    in_port=1,actions=mod_dl_src:00:0B:00:00:00:03,mod_dl_dst:0A:00:00:00:00:02,output=3
 $ofctl add-flow R1 \
     in_port=2,ip,nw_src=10.4.4.48,nw_dst=10.1.1.17,actions=mod_dl_src:0A:00:00:00:00:01,mod_dl_dst:00:0A:00:00:00:02,output=1
 $ofctl add-flow S1 \
@@ -39,7 +39,7 @@ $ofctl add-flow S1 \
 
 # David - Carol
 $ofctl add-flow S2 \
-    in_port=4,actions=mod_dl_src:00:0B:00:00:00:03,mod_dl_dst:0B:00:00:00:00:01,output=3
+    in_port=2,actions=mod_dl_src:00:0B:00:00:00:04,mod_dl_dst:0B:00:00:00:00:01,output=4
 $ofctl add-flow R2 \
     in_port=1,ip,nw_src=10.4.4.96,nw_dst=10.6.6.69,actions=mod_dl_src:0B:00:00:00:00:02,mod_dl_dst:00:0C:00:00:00:02,output=2
 $ofctl add-flow S3 \
@@ -49,9 +49,9 @@ $ofctl add-flow S3 \
 $ofctl add-flow S3 \
     in_port=1,actions=mod_dl_src:00:0C:00:00:00:02,mod_dl_dst:0B:00:00:00:00:02,output=2
 $ofctl add-flow R2 \
-    in_port=2,ip,nw_src=10.6.6.69,nw_dst=10.4.4.96,actions=mod_dl_src:0B:00:00:00:00:01,mod_dl_dst:00:0B:00:00:00:03,output=1
+    in_port=2,ip,nw_src=10.6.6.69,nw_dst=10.4.4.96,actions=mod_dl_src:0B:00:00:00:00:01,mod_dl_dst:00:0B:00:00:00:04,output=1
 $ofctl add-flow S2 \
-    in_port=3,actions=mod_dl_src:00:0B:00:00:00:04,mod_dl_dst:D0:D0:D0:D0:D0:D0,output=4
+    in_port=4,actions=mod_dl_src:00:0B:00:00:00:02,mod_dl_dst:D0:D0:D0:D0:D0:D0,output=2
 
 # Print the flows installed in each switch
 for switch in R1 R2 S1 S2 S3;

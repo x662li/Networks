@@ -7,6 +7,8 @@ from mininet.log import setLogLevel
 class CSLRTopo(Topo):
     
     def __init__(self):
+        "Create Topology"
+        
         Topo.__init__(self)
         
         # add hosts
@@ -21,7 +23,7 @@ class CSLRTopo(Topo):
         S3 = self.addSwitch('S3', listenPort=6636)
         R1 = self.addSwitch('R1', listenPort=6637)
         R2 = self.addSwitch('R2', listenPort=6638)
-        
+         
         # link between hosts and switches
         self.addLink(Alice, S1) # eth0 - eth1
         self.addLink(Bob, S2) # eth0 - eth1
@@ -58,14 +60,10 @@ def run():
     
     # set IP, MAC for Routers
     R1 = net.get('R1')
-    # R1.intf("R1-eth1").setIP("10.1.1.14", 24)
-    # R1.intf("R1-eth2").setIP("10.4.4.14", 24)
     R1.intf("R1-eth1").setMAC("0A:00:00:00:00:01")
     R1.intf("R1-eth2").setMAC("0A:00:00:00:00:02")
     
     R2 = net.get('R2')
-    # R2.intf("R2-eth1").setIP("10.4.4.28", 24)
-    # R2.intf("R2-eth2").setIP("10.6.6.46", 24)
     R2.intf("R2-eth1").setMAC("0B:00:00:00:00:01")
     R2.intf("R2-eth2").setMAC("0B:00:00:00:00:02")
     
