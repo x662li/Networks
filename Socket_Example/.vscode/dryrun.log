@@ -1,9 +1,0 @@
-make --dry-run --always-make --keep-going --print-directory
-make: Entering directory `/Users/lixinyang/Desktop/academics/spring2022/CS 656/code_repo/A1_Code'
-javac -g server/server.java
- 
-javac -g server/ServerUtil.java
-javac -g client/client.java
-javac -g client/ClientUtil.java
-make: Leaving directory `/Users/lixinyang/Desktop/academics/spring2022/CS 656/code_repo/A1_Code'
- 
